@@ -90,14 +90,34 @@ public class HueMessenger : MonoBehaviour {
 
       foreach (Light l in Lights)
       {
-         HTTP.Request request = UpdateLight(l);
+         if (!l.ShouldPush())
+            continue;
+
+         string apiCall = "/api/" + User + "/lights/" + l.id + "/state";
+         float fade = Mathf.Clamp01(l.fade);
+         HSBColor hsbColor = new HSBColor(l.color);
+         int transitionTime = (int)(l.transitionTime * 10.0f); //this is specified in hundreds of millisecs (i.e 10 = 1000 ms = 1s)
+         string body = "{\"on\": " + ((l.on && (fade > 0.0f)) ? "true" : "false") +
+                       " \"hue\": " + (int)(hsbColor.h * 65535.0f) +
+                       " \"sat\": " + (int)(hsbColor.s * 255.0f) +
+                       " \"bri\": " + (int)(hsbColor.b * fade * 255.0f) +
+                       " \"transitiontime\": " + transitionTime +
+                       "}";
+         string url = "http://" + BridgeIP + apiCall;
+         Debug.Log("URL: " + url + " body: " + body + " at Time: " + Time.time + " deltaSinceLastUpdate: " + l.TimeSinceLastUpdate() + "\n");
+         HTTP.Request request = new HTTP.Request("put", "http://" + BridgeIP + apiCall, JSON.JsonDecode(body) as Hashtable);
+         request.Send();
+
+         l.Pushed();   
 
          if (!FireAndForget)
          {
+            float startTime = Time.time;
             while (!request.isDone)
             {
                yield return null;
             }
+            Debug.Log("Received response in " + (Time.time - startTime) +  " secs!");
 
             if (!request.response.Text.Contains("success"))
                Debug.Log("Error updating light: " + request.response.Text);
