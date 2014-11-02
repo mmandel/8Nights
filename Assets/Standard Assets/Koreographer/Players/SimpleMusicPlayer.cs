@@ -11,6 +11,9 @@ public class SimpleMusicPlayer : MonoBehaviour, KoreographerInterface
 {
    public bool Loop = false;
 
+   //# of seconds ahead of real time to send events out
+   public float EventPreRoll = 0.0f;
+
 	[SerializeField]
 	Koreography koreography = null;
 
@@ -42,6 +45,8 @@ public class SimpleMusicPlayer : MonoBehaviour, KoreographerInterface
          // Current time update!
          int prevSampleTime = sampleTime;			// Store last frame's value.
          int curSampleTime = audio.timeSamples;		// Start updating for this frame.
+         //process pre-roll
+         curSampleTime += (int)((float)koreography.SourceClip.frequency * audio.pitch * EventPreRoll);
          if (curSampleTime == prevSampleTime)
          {
             // We're playing but the Audio System didn't update the time.  Interpolate based on
