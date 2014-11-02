@@ -1,6 +1,8 @@
 ﻿//
 // set of Uniduino - blink an LED!
 //
+// NOTE: you have to upload the "StandardFirmata" sketch to the Arduino for this script to work
+//
 
 using UnityEngine;
 using System.Collections;
