@@ -196,7 +196,11 @@ public class AudioBus : MonoBehaviour
 		sourceCom.Stop();
 		Object.DestroyImmediate(busClip);
 
+#if UNITY_5_0
+		busClip = AudioClip.Create("AUDIO_BUS", BUS_SAMPLE_LENGTH, busChannels, busFrequency, true, ReadBusAudioCallback, SetBusPositionCallback);
+#else
 		busClip = AudioClip.Create("AUDIO_BUS", BUS_SAMPLE_LENGTH, busChannels, busFrequency, false, true, ReadBusAudioCallback, SetBusPositionCallback);
+#endif
 
 		// Simply creating the AudioClip will cause both the ReadBusAudioCallback and SetBusPositionCallback to be called.
 		//  Reset the bus values read/play positions after this initialization phase to get us back into order.

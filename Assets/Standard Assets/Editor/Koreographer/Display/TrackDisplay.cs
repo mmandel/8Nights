@@ -58,39 +58,64 @@ public class TrackDisplay
 				EventDisplay.ValidateDisplayRect(ref eventRect);
 				EventDisplay.Draw(eventRect, eventTrack, e, selectedEvents.Contains(e));
 
+				// Do this only during Repaint to cut down on extra processing.
 				if (Event.current.type == EventType.Repaint)
 				{
 					// Add a little bit to either side.
 					eventRect.width += 3f;
 					eventRect.x -= 1.5f;
 
-					// Cursor Left:
-					Rect leftRect = new Rect(eventRect);
-					Rect centRect = new Rect(eventRect);
-					Rect rightRect = new Rect(eventRect);
+					Rect[] rectSet;
 
-					float resizeRectWidth = 3f;
-
-					// Resize Edges.
-					if (eventRect.width <= 6f)
+					if (e.IsOneOff() || eventRect.width <= 12f)
 					{
-						resizeRectWidth = eventRect.width / 3f;
+						// Switch between resize and move modes.
+						if (Event.current.alt)
+						{
+							Rect leftRect = new Rect(eventRect);
+							Rect rightRect = new Rect(eventRect);
+
+							leftRect.xMax = leftRect.center.x;
+							rightRect.xMin = rightRect.center.x;
+
+							EditorGUIUtility.AddCursorRect(leftRect, MouseCursor.ResizeHorizontal);
+							EditorGUIUtility.AddCursorRect(rightRect, MouseCursor.ResizeHorizontal);
+
+							rectSet = new Rect[4]{eventRect, leftRect, rightRect, new Rect()};
+						}
+						else
+						{
+							// Default to move only.
+							EditorGUIUtility.AddCursorRect(eventRect, MouseCursor.MoveArrow);
+
+							rectSet = new Rect[4]{eventRect, new Rect(), new Rect(), eventRect};
+						}
+					}
+					else
+					{
+						// Cursor Left:
+						Rect leftRect = new Rect(eventRect);
+						Rect centRect = new Rect(eventRect);
+						Rect rightRect = new Rect(eventRect);
+						
+						float resizeRectWidth = 3f;
+						
+						leftRect.xMax = leftRect.xMin + resizeRectWidth;
+						rightRect.xMin = rightRect.xMax - resizeRectWidth;
+						
+						// Etc.
+						centRect.xMin = leftRect.xMax;
+						centRect.xMax = rightRect.xMin;
+						
+						EditorGUIUtility.AddCursorRect(leftRect, MouseCursor.ResizeHorizontal);
+						EditorGUIUtility.AddCursorRect(rightRect, MouseCursor.ResizeHorizontal);
+						EditorGUIUtility.AddCursorRect(centRect, MouseCursor.MoveArrow);
+						
+						// Store the rects!
+						rectSet = new Rect[4]{eventRect, leftRect, rightRect, centRect};
 					}
 
-					leftRect.xMax = leftRect.xMin + resizeRectWidth;
-					rightRect.xMin = rightRect.xMax - resizeRectWidth;
-
-					// Etc.
-					centRect.xMin = leftRect.xMax;
-					centRect.xMax = rightRect.xMin;
-
-					EditorGUIUtility.AddCursorRect(leftRect, MouseCursor.ResizeHorizontal);
-					EditorGUIUtility.AddCursorRect(rightRect, MouseCursor.ResizeHorizontal);
-					EditorGUIUtility.AddCursorRect(centRect, MouseCursor.MoveArrow);
-
-					// Store the rects!
-					Rect[] rectSet = new Rect[4]{eventRect, leftRect, rightRect, centRect};
-					eventDisplays.Add(e, rectSet);
+					eventDisplays[e] = rectSet;
 				}
 			}
 

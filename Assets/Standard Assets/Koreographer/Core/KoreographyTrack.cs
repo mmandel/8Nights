@@ -98,10 +98,10 @@ public partial class KoreographyTrack : ScriptableObject
 
 	/**
 	 * Adds an event to the track.  The event is inserted in order by
-	 * sample time.  The event is NOT added if it is an Instantaneous
-	 * event and another Instantaneous event exists at the same time.
+	 * sample time.  The event is NOT added if it is a OneOff event
+	 * and another OneOff event exists at the same time.
 	 * 
-	 * TODO: Remove the "no duplicate Instantaneous" requirement(?).
+	 * TODO: Remove the "no duplicate OneOffs" requirement(?).
 	 */
 	// Editor only?
 	public bool AddEvent(KoreographyEvent addEvent)
@@ -110,10 +110,10 @@ public partial class KoreographyTrack : ScriptableObject
 
 		bool bAdd = true;
 
-		if (addEvent.IsInstantaneous())
+		if (addEvent.IsOneOff())
 		{
 			KoreographyEvent sameStartEvent = GetEventAtStartSample(addEvent.StartSample);
-			if (sameStartEvent != null && sameStartEvent.IsInstantaneous())
+			if (sameStartEvent != null && sameStartEvent.IsOneOff())
 			{
 				// Disallow the add!
 				bAdd = false;
@@ -179,7 +179,7 @@ public partial class KoreographyTrack : ScriptableObject
 		// Check inclusive for Start/End times!!  This simplifies the logic a bit.
 		List<KoreographyEvent> eventsToUpdate = mEventList.Where(x=>
 		                                                    (x.StartSample >= startTime && x.StartSample <= endTime) || 		// Straddle start sample?
-		                                                    (x.EndSample <= endTime && x.EndSample >= startTime && !x.IsInstantaneous()) || // Straddle end sample?
+		                                                    (x.EndSample <= endTime && x.EndSample >= startTime && !x.IsOneOff()) || // Straddle end sample?
 		                                                    (x.StartSample <= startTime && x.EndSample >= endTime)).ToList();	// Straddle both ends?
 		foreach(KoreographyEvent e in eventsToUpdate)
 		{

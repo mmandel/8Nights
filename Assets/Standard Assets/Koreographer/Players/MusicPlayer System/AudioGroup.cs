@@ -71,6 +71,13 @@ public class AudioGroup
 		}
 	}
 
+   public AudioLayer GetLayer(int layerIdx)
+   {
+      if ((layerIdx >= 0) && (layerIdx < NumLayers))
+         return audioLayers[layerIdx];
+      return null;
+   }
+
 	public void InitLayerData()
 	{
 		foreach (AudioLayer layer in audioLayers)

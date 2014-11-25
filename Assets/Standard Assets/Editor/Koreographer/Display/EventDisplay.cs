@@ -30,9 +30,9 @@ public class EventDisplay
 
 	public static void Draw(Rect displayRect, KoreographyTrack track, KoreographyEvent drawEvent, bool isSelected = false)
 	{
-		if (drawEvent.IsInstantaneous())
+		if (drawEvent.IsOneOff())
 		{
-			DrawInstantaneous(displayRect, drawEvent, isSelected);
+			DrawOneOff(displayRect, drawEvent, isSelected);
 		}
 		else
 		{
@@ -51,7 +51,7 @@ public class EventDisplay
 		}
 	}
 
-	public static void DrawInstantaneous(Rect displayRect, KoreographyEvent drawEvent, bool isSelected = false)
+	public static void DrawOneOff(Rect displayRect, KoreographyEvent drawEvent, bool isSelected = false)
 	{
 		Color originalBG = GUI.backgroundColor;
 		GUI.backgroundColor = isSelected ? Color.green : Color.red;

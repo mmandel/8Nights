@@ -72,6 +72,10 @@ public class HueMessenger : MonoBehaviour
    public delegate void HueHandler(object sender, HueEventArgs e);
 
    bool _isRequesting = false;
+   float _masterFader = 1.0f;
+
+   public void SetMasterFade(float f) { _masterFader = f; }
+   public float MasterFader() { return _masterFader; }
 
    void Awake()
    {
@@ -134,6 +138,15 @@ public class HueMessenger : MonoBehaviour
             StartCoroutine(UpdateLights());
       }
    }
+
+   /*void LateUpdate()
+   {
+      for (int i = 0; i < Lights.Length; i++)
+      {
+         HueMessenger.Light l = Lights[i];
+         l.
+      }
+   }*/
 
    public IEnumerator UpdateLights()
    {

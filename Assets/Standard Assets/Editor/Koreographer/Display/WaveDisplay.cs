@@ -20,8 +20,6 @@ public class WaveDisplay
 	public static int pixelDistanceToPlayheadMarker = 200;
 
 	const int MAX_CHANNELS_TO_DRAW = 2; // WARNING! Do not edit this without reworking Draw()!
-	int numChannelsInClip = 0;
-	int numChannelsToDraw = 0;
 
 	List<ChannelDisplay> channelDisplays = new List<ChannelDisplay>();
 	TrackDisplay trackDisplay = new TrackDisplay();
@@ -31,15 +29,31 @@ public class WaveDisplay
 	Color mainBGColor = new Color(0.19215f, 0.19215f, 0.19215f);
 	Color[] sectionBGColors = new Color[]{new Color(0.19215f, 0f, 0f), new Color(0f, 0.19215f, 0f), new Color(0f, 0f, 0.19215f)};
 
-	public WaveDisplay(AudioClip clip)
+	public void SetAudioData(AudioClip clip)
 	{
-		numChannelsInClip = clip.channels;
-		numChannelsToDraw = Mathf.Min(numChannelsInClip, MAX_CHANNELS_TO_DRAW);
+		// Clear out previous channel displays.
+		channelDisplays.Clear();
 
+		float[] rawData = new float[clip.samples * clip.channels];
+		clip.GetData(rawData, 0);
+		
+		int numChannelsToDraw = Mathf.Min(clip.channels, MAX_CHANNELS_TO_DRAW);
 		for (int i = 0; i < numChannelsToDraw; ++i)
 		{
-			channelDisplays.Add(new ChannelDisplay(clip, i));
+			float[] channelData = new float[clip.samples];
+			
+			for (int rawSampleIdx = i, channelSampleIdx = 0; rawSampleIdx < rawData.Length; rawSampleIdx += clip.channels, ++channelSampleIdx)
+			{
+				channelData[channelSampleIdx] = rawData[rawSampleIdx];
+			}
+			
+			channelDisplays.Add(new ChannelDisplay(channelData));
 		}
+	}
+
+	public bool HasAudioData()
+	{
+		return (channelDisplays.Count > 0);
 	}
 
 	public void SetEventTrack(KoreographyTrack newEventTrack)
@@ -87,7 +101,8 @@ public class WaveDisplay
 				channelRect.y += i * height;
 
 				// Draw ZERO Line
-				Drawing.DrawLine(new Vector2(channelRect.x, channelRect.center.y), new Vector2(channelRect.x + channelRect.width, channelRect.center.y), Color.black, 1f, false);
+				Handles.color = new Color(0f, 0f, 0f, KoreographerColors.HandleFullAlpha);
+				Handles.DrawLine(new Vector2(channelRect.x, channelRect.center.y), new Vector2(channelRect.x + channelRect.width, channelRect.center.y));
 
 				// Draw Channel Content
 				channelDisplays[i].Draw(channelRect, displayState);
@@ -135,8 +150,8 @@ public class WaveDisplay
 	void DrawPlayheadLine(int x, int startY, int endY)
 	{
 		float grayValue = 180f / 255f;
-		Color color = new Color(grayValue, grayValue, grayValue);
-		Drawing.DrawLine(new Vector2(x, startY), new Vector2(x, endY), color, 1f, false);
+		Handles.color = new Color(grayValue, grayValue, grayValue, KoreographerColors.HandleFullAlpha);
+		Handles.DrawLine(new Vector2(x, startY), new Vector2(x, endY));
 	}
 	
 	void DrawBeatLines(Rect contentRect, WaveDisplayState displayState, Koreography koreo)
@@ -169,12 +184,6 @@ public class WaveDisplay
 
 	void DrawBeatLinesForSection(Rect contentRect, WaveDisplayState displayState, TempoSectionDef tempoSection, int startSample, int endSample, Color sectionColor)
 	{
-		float grayValue = 170f / 255f;
-		Color firstBeatColor = new Color(grayValue, grayValue, grayValue);
-
-		grayValue = 96f / 255f;
-		Color normalBeatColor = new Color(grayValue, grayValue, grayValue);
-
 		// Only draw the lines if our current zoom level is reasonable.  
 		if (tempoSection.SamplesPerBeat >= displayState.samplesPerPixel * 2)		// Check that we will not just be drawing a line (or multiple lines!) for each pixel.  Require at least one gap.
 		{
@@ -202,12 +211,18 @@ public class WaveDisplay
 					beatNum = ((int)((float)(startSample - tempoSection.StartSample) / tempoSection.SamplesPerBeat));
 				}
 
+				float grayValue = 170f / 255f;
+				Color firstBeatColor = new Color(grayValue, grayValue, grayValue, KoreographerColors.HandleFullAlpha);
+				
+				grayValue = 96f / 255f;
+				Color normalBeatColor = new Color(grayValue, grayValue, grayValue, KoreographerColors.HandleFullAlpha);
+
 				// Draw all the beat lines!
 				for (; lineLoc < (float)endSample - displayState.firstSamplePackToDraw; lineLoc += tempoSection.SamplesPerBeat)
 				{
 					int x = (int)(contentRect.x + (lineLoc / displayState.samplesPerPixel));
-					Color drawColor = (beatNum % tempoSection.BeatsPerMeasure == 0) ? firstBeatColor : normalBeatColor;
-					Drawing.DrawLine(new Vector2(x, contentRect.yMin), new Vector2(x, contentRect.yMax), drawColor, 1f, false);
+					Handles.color = (beatNum % tempoSection.BeatsPerMeasure == 0) ? firstBeatColor : normalBeatColor;
+					Handles.DrawLine(new Vector2(x, contentRect.yMin), new Vector2(x, contentRect.yMax));
 
 					// Increment the beat count!
 					beatNum++;

@@ -1,7 +1,7 @@
 ----------------------------------------------
             Koreographer™
  Copyright © 2014 Sonic Bloom, LLC
-            Version 0.0.7
+            Version 0.0.8
 ----------------------------------------------
 
 Thank you for downloading Koreographer™!
@@ -86,6 +86,36 @@ General Provisions
 -----------------
  Version History
 -----------------
+
+0.0.8 Developer Preview - Fourth Release!
+- NEW: Faster Waveform rendering thanks to using Unity's built-in line renderer over the custom community created one.
+- NEW: Unity 5 Support!  Koreograhper can now be opened in the latest Unity 5 Beta!  AudioClips set to not preload and load in the background are also supported!
+  - NOTE: A known bug exists in the latest Unity 5 Beta (currently b11) that causes extreme slowdown when rendering (only affects Unity's built-in line renderer).  Unity is aware of the issue.
+- NEW: We've been surreptitiously listening to you all.  "Instantaneous" events are now renamed to "OneOff".  Not only is it shorter but it appears to be far more natural!
+- NEW: OneOff events and Span events 12px or less in size will now only move with the mouse by default.  In order to resize these events, hold down the ALT key [or Option key on a Mac] to switch to resize mode!
+- NEW: Sample time estimation during audio playback while in the Koreography Editor!  The SimplePlayer and MusicPlayer runtime classes already did this.  We now estimate sample positions when the underlying AudioSource reports that the playhead hasn't moved even though we expect that it has.  This should result in more responsive event creation and playhead updates in scenarios with enough speed to benefit (fully cached Waveform display, etc.).
+- NEW: "Play From Here" option added to the Waveform Display context menu (right-click).
+- NEW: Support for skipping the audio playhead forward and back by 1 measure at a time with the Left and Right Arrow keys!
+- NEW: Increase/Decrease the playback speed (pitch) of the audio in the Koreography Editor with the Up and Down Arrow keys!
+- NEW: A new toggle called "Auto Scroll" exists in the Koreography Editor (on by default).  When this is on the Waveform display will move along with the music as it does currently.  When the toggle is off, the Waveform display will not automatically scroll (the playhead will continue to move, however).
+- NEW: Keyboard Controls Overhaul!
+  - E, Return, or Enter - Create New Event at the playhead position [during audio playback].
+  - Spacebar - Play/Pause audio.
+  - Shift+Spacebar - Stop audio [clears playhead, sets audio to start at beginning].
+  - Left/Right Arrows - Scan ahead/back by one measure.
+  - Up/Down Arrows - Speed up/slow down audio playback speed (pitch).
+  - Escape - Remove focus from current button/control and focus the Waveform display (may require several presses depending on state of the current 'hot' control).
+- NEW: Waveform display LCD timing readouts now default to showing MusicTime rather than sample position.
+- FIX: Properly clear the selection box when the mouse is released outside of the Waveform Display or the Koreography Editor window.
+- FIX: Properly handle clearing out the internal selection tracking list when committing an Undo/Redo action that modifies it.  No more Exception spam [from this]!
+- FIX: If a selection exists when the Koreography Editor is in Draw mode, the selection will clear with the next mouse click rather than begin drawing events.
+- FIX: Refactored the initial AudioClip processing to slightly speed up the initial AudioClip lodaing process.
+- FIX: Logic surrounding the KLUDGE from the previous release regarding selecting the Koreographer internally hidden object has been updated.  The selection now changes to the currently loaded Koreography and updates to new Koreography as long as the user does not select another object in the scene or project.  It is not necessary in Unity 5.x at all and running in Unity 4.x will now not override Project Folder asset selections.
+- FIX: Pasting events from the context menu (right-click) now respects the "Snap to Beat" setting.
+- FIX: Scrubbing the audio during playback by scrolling with a track-pad or mouse no longer causes a slingshot effect (which would frequently send the playhead further backwards than where started even though the scroll direction was forward).
+- FIX: Buttons/controls around the Waveform display now don't steal the focus away when interracted with, returning or pushing the control to the Waveform display.
+- FIX: Koreography Editor window now has a valid minSize.  This new minimum size allows all potential controls to be seen.
+- FIX: New/Load buttons now remember the chosen asset path, making subsequent load/save operations less aggravating.
 
 0.0.7 Developer Preview - Third Release!
 - NEW: Mouse input for event creation (drawing).

@@ -133,8 +133,8 @@ public class KoreographyEvent
 	#endregion
 	#region Methods
 
-	// Instantaneous events have a range/span of 0.
-	public bool IsInstantaneous()
+	//  events have a range/span of 0.
+	public bool IsOneOff()
 	{
 		return StartSample == EndSample;
 	}
@@ -151,7 +151,7 @@ public class KoreographyEvent
 			retVal = 0f;
 		}
 		else if (sampleTime > EndSample ||	// Check that we're beyond the end.
-		         IsInstantaneous())			// Logic order is important here(?), enabling this check!
+		         IsOneOff())			// Logic order is important here(?), enabling this check!
 		{
 			retVal = 1f;
 		}

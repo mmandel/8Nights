@@ -395,25 +395,53 @@ public class Koreography : ScriptableObject
 		for (int i = 1; i <= destTempoSectionIdx; ++i)
 		{
 			//  +1 because the GetBeatTimeFromSampleTime is 0-indexed and we want to build on it.
-			beatTime += mTempoSections[i - 1].GetBeatTimeFromSampleTime(mTempoSections[i].StartSample) + 1;
+			beatTime += Mathf.Floor(mTempoSections[i - 1].GetBeatTimeFromSampleTime(mTempoSections[i].StartSample - 1)) + 1f;
 		}
 
 		return beatTime + mTempoSections[destTempoSectionIdx].GetBeatTimeFromSampleTime(sampleTime, subBeats);
 	}
 
-	public int GetMeasureTimeFromSampleTime(int sampleTime)
+	public float GetMeasureTimeFromSampleTime(int sampleTime)
 	{
-		int measureTime = 0;
+		float measureTime = 0;
 		
 		int destTempoSectionIdx = GetTempoSectionIndexForSample(sampleTime);
 
 		for (int i = 1; i <= destTempoSectionIdx; ++i)
 		{
 			// +1 because GetMeasureTimeFromSampleTime is 0-indexed and we want to build on it.
-			measureTime += Mathf.FloorToInt(mTempoSections[i - 1].GetMeasureTimeFromSampleTime(mTempoSections[i].StartSample)) + 1;
+			measureTime += Mathf.Floor(mTempoSections[i - 1].GetMeasureTimeFromSampleTime(mTempoSections[i].StartSample - 1)) + 1f;
 		}
 
-		return measureTime + (int)mTempoSections[destTempoSectionIdx].GetMeasureTimeFromSampleTime(sampleTime);
+		return measureTime + mTempoSections[destTempoSectionIdx].GetMeasureTimeFromSampleTime(sampleTime);
+	}
+	
+	public int GetSampleTimeFromMeasureTime(int measure)
+	{
+		int i = 0;
+		while (i < mTempoSections.Count - 1)
+		{
+			// Find the maximum measure of the current section (measure that contains the last sample before the next section).
+			int curSectionNumMeasures = Mathf.FloorToInt(mTempoSections[i].GetMeasureTimeFromSampleTime(mTempoSections[i + 1].StartSample - 1));
+
+			if (measure >= curSectionNumMeasures)
+			{
+				// Subtract out and continue!
+				measure -= curSectionNumMeasures;
+				++i;
+			}
+			else
+			{
+				// We're out!
+				break;
+			}
+		}
+
+		TempoSectionDef targetSection = mTempoSections[i];
+
+		// When converting measures to samples we must be careful to use the next sample that is fully inside the measure.
+		//  Rounding down could actually return us the last sample from the previous measure.
+		return targetSection.StartSample + Mathf.CeilToInt((float)measure * (float)targetSection.BeatsPerMeasure * targetSection.SamplesPerBeat);
 	}
 
 	public float GetBeatCountInMeasureFromSampleTime(int sampleTime)

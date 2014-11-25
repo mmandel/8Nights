@@ -37,6 +37,17 @@ public static class CustomAssetUtility
 	}
 }
 
+// This class contains colors and related values that are used throughout
+//  the Koreorapher Editor system.
+public static class KoreographerColors
+{
+	// This is necessary when using the UnityEditor.Handles class because the internal
+	//  processing on the lines automatically multiplies the alpha of the color stored
+	//  in the static "Handles.color" field by 0.75.  We prepare for this by setting
+	//  alpha to a number that when multiplied by 0.75 yields 1, namely 1.333333.
+	public static float HandleFullAlpha = 1.333333f;
+}
+
 // Line drawing routine originally courtesy of Linusmartensson:
 // http://forum.unity3d.com/threads/71979-Drawing-lines-in-the-editor
 //

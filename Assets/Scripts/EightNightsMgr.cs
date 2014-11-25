@@ -9,6 +9,11 @@ using System;
 
 public class EightNightsMgr : MonoBehaviour 
 {
+   [Range(0.0f, 1.0f)]
+   public float MasterFader = 1.0f;
+   public bool TestLights = false;
+   public LightGroupConfig[] LightGroups = new LightGroupConfig[1];
+   
 
    //events
    public event LightHandler OnLightChanged; //send out whenever a physical light is updated
@@ -91,6 +96,8 @@ public class EightNightsMgr : MonoBehaviour
       {
          if (!Enabled || !_groupConfig.Enabled)
             return;
+
+         intensity *= EightNightsMgr.Instance.MasterFader;
 
          if (LightType == LightTypes.Hue)
          {
@@ -185,9 +192,6 @@ public class EightNightsMgr : MonoBehaviour
       float _timeStamp;
 
    }
-
-   public bool TestLights = false;
-   public LightGroupConfig[] LightGroups = new LightGroupConfig[1];
 
    public static EightNightsMgr Instance { get; private set; }
 

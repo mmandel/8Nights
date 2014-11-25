@@ -8,6 +8,7 @@ using UnityEngine;
 // TODO: Convert the AudioBus *AND* this class into ones that support a queue of files to playback from.  This would make transitions
 //  far easier to handle.
 
+[RequireComponent(typeof(AudioSource))]
 [AddComponentMenu("Koreographer/Music Players/Music Player")]
 public class MusicPlayer : MonoBehaviour, KoreographerInterface
 {
@@ -48,16 +49,19 @@ public class MusicPlayer : MonoBehaviour, KoreographerInterface
 
 	public AudioBus bus = null;
 
+	AudioSource audioCom;
+
 	void Awake()
 	{
+		audioCom = GetComponent<AudioSource>();
 		Koreographer.Instance.musicPlaybackController = this;
 		bus.AudioEnded += OnAudioEnded;
 	}
 
 	void Start()
 	{
-//		bus.Init(audio, playbackMusic.Channels, playbackMusic.Frequency);		// CAN'T DO THIS!  Need to Init the AudioGroup before the Properties will work.
-		bus.Init(audio, musicChannels, musicFrequency);
+//		bus.Init(audioCom, playbackMusic.Channels, playbackMusic.Frequency);		// CAN'T DO THIS!  Need to Init the AudioGroup before the Properties will work.
+		bus.Init(audioCom, musicChannels, musicFrequency);
 
 		if (playbackMusic != null && !playbackMusic.IsEmpty())
 		{

@@ -7,9 +7,6 @@ using UnityEngine;
 
 public class ChannelDisplay
 {
-	AudioClip clip = null;
-	int channelIndex = 0;
-
 	float channelAmplitudePercent = 0.9f;
 
 	float[] sampleData = new float[0];
@@ -24,26 +21,11 @@ public class ChannelDisplay
 	}
 
 	int cachedSamplesPerPixel = 0;
-	WaveformCacheEntry[] cachedData = null;
+	WaveformCacheEntry[] cachedData = new WaveformCacheEntry[0];
 
-	public ChannelDisplay(AudioClip inClip, int inChannelIndex)
+	public ChannelDisplay(float[] inSamples)
 	{
-		clip = inClip;
-		channelIndex = inChannelIndex;
-
-		sampleData = new float[clip.samples];
-
-		// Move this to the caller?
-		float[] rawData = new float[clip.samples * clip.channels];
-		clip.GetData(rawData, 0);
-
-		// Unpack the samples.
-		int channelSampleIdx = 0;
-		for (int rawSampleIdx = channelIndex; rawSampleIdx < rawData.Length; rawSampleIdx += clip.channels)
-		{
-			sampleData[channelSampleIdx] = rawData[rawSampleIdx];
-			++channelSampleIdx;
-		}
+		sampleData = inSamples;
 
 		// Set up the cache.  Reserve the maximum required size [ceil(sampleCount/2)].
 		cachedData = new WaveformCacheEntry[Mathf.CeilToInt((float)sampleData.Length / 2f)];
@@ -80,7 +62,7 @@ public class ChannelDisplay
 
 	void DrawWaves(Rect waveArea, WaveDisplayState displayState)
 	{
-		Color lineColor = new Color(1f, 149f / 255f, 0f);
+		UnityEditor.Handles.color = new Color(1f, 149f / 255f, 0f, KoreographerColors.HandleFullAlpha);
 
 		int startSample = displayState.firstSamplePackToDraw;
 		int amplitude = (int)(channelAmplitudePercent * (waveArea.height / 2f));
@@ -98,7 +80,7 @@ public class ChannelDisplay
 			// Get y's for left channel.
 			startPoint.y = lastY;
 			endPoint.y = waveArea.center.y + (sampleData[startSample + i] * amplitude);
-			Drawing.DrawLine(startPoint, endPoint, lineColor, 1f, false);
+			UnityEditor.Handles.DrawLine(startPoint, endPoint);
 			
 			// Store previous y for next time!
 			lastY = endPoint.y;
@@ -107,7 +89,7 @@ public class ChannelDisplay
 
 	void DrawMinMax(Rect waveArea, WaveDisplayState displayState)
 	{
-		Color lineColor = new Color(1f, 104f / 255f, 0f);
+		UnityEditor.Handles.color = new Color(1f, 104f / 255f, 0f, KoreographerColors.HandleFullAlpha);
 
 		int amplitude = (int)(channelAmplitudePercent * (waveArea.height / 2f));
 		
@@ -161,14 +143,14 @@ public class ChannelDisplay
 
 			startPoint.y = entry.minMaxValues.x;
 			endPoint.y = entry.minMaxValues.y;
-			
-			Drawing.DrawLine(startPoint, endPoint, lineColor, 1f, false);
+
+			UnityEditor.Handles.DrawLine(startPoint, endPoint);
 		}
 	}
 
 	void DrawRMS(Rect waveArea, WaveDisplayState displayState)
 	{
-		Color lineColor = new Color(1f, 0.58431f, 0f);
+		UnityEditor.Handles.color = new Color(1f, 0.58431f, 0f, KoreographerColors.HandleFullAlpha);
 
 		int amplitude = (int)(channelAmplitudePercent * (waveArea.height / 2f));
 
@@ -223,8 +205,8 @@ public class ChannelDisplay
 
 			startPoint.y = entry.rmsValues.x;
 			endPoint.y = entry.rmsValues.y;
-			
-			Drawing.DrawLine(startPoint, endPoint, lineColor, 1f, false);
+
+			UnityEditor.Handles.DrawLine(startPoint, endPoint);
 		}
 	}
 }

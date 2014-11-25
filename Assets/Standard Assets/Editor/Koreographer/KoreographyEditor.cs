@@ -25,6 +25,10 @@ public class KoreographyEditor : EditorWindow
 	bool bIsWaveDisplayFocused = false;
 
 	AudioSource audioSrc = null;
+	int estimatedSampleTime = 0;
+
+	// Cached Asset Path
+	string assetPath = string.Empty;
 
 	Koreography editKoreo = null;
 	
@@ -45,9 +49,10 @@ public class KoreographyEditor : EditorWindow
 	List<string> payloadTypeNames = new List<string>();
 	int currentPayloadTypeIdx = -1;
 
-	bool bCreateInstantaneous = true;
+	bool bCreateOneOff = true;
 
 	Vector2 scrollPosition = Vector2.zero;
+	bool bScrollWithPlayhead = true;
 	
 	bool bSnapTimingToBeat = true;
 	int snapSubBeatCount = 0;
@@ -90,7 +95,7 @@ public class KoreographyEditor : EditorWindow
 		SolarTime,
 	}
 
-	LCDDisplayMode lcdMode = LCDDisplayMode.SampleTime;
+	LCDDisplayMode lcdMode = LCDDisplayMode.MusicTime;
 
 	enum ControlMode
 	{
@@ -126,37 +131,18 @@ public class KoreographyEditor : EditorWindow
 	[MenuItem("Audio Tools/Koreography Editor")]
 	static void ShowWindow()
 	{
-		EditorWindow.GetWindow(typeof(KoreographyEditor), false, "Koreography Editor");
-
-		// Init() is called in OnEnable(), which gets called before the window is actually assigned.
+		EditorWindow win = EditorWindow.GetWindow(typeof(KoreographyEditor), false, "Koreography Editor");
+		win.minSize = new Vector2(900f, 710f);
 	}
 
 	#endregion
 	#region Methods
 
-	// Neither the constructor nor ShowWindow() is called if the window was left open from the previous
-	//  Editor application instance.  As such, we need to check for Init() in another location as well.
-	//  This also works post scripts recompile.
 	void OnEnable()
 	{
-		Init();
-	}
-
-	void Update()
-	{
-		// Force a Repaint() while audio is playing to update the playhead.
-		//  Check also for IsSelecting() if we can figure out how to get
-		//  MouseUp events outside of the EditorWindow area.
-		if (IsPlaying())
-		{
-			Repaint();
-		}
-	}
-
-	public void Init()
-	{
 		wantsMouseMove = true;
-
+		EditorApplication.modifierKeysChanged += Repaint;
+		
 		// Initialize the AudioSource for playback and editing.
 		if (audioSrc == null)
 		{
@@ -203,6 +189,35 @@ public class KoreographyEditor : EditorWindow
 		eventsToHighlight.Clear();
 	}
 
+	void OnDisable()
+	{
+		EditorApplication.modifierKeysChanged -= Repaint;
+	}
+
+	void Update()
+	{
+		// Force a Repaint() while audio is playing to update the playhead.
+		if (IsPlaying())
+		{
+			Repaint();
+
+			int rawSampleTime = GetCurrentRawMusicSample();
+
+			if (rawSampleTime == estimatedSampleTime)
+			{
+				estimatedSampleTime += (int)((float)EditClip.frequency * audioSrc.pitch * Time.deltaTime);
+			}
+			else
+			{
+				estimatedSampleTime = rawSampleTime;
+			}
+		}
+		else
+		{
+			estimatedSampleTime = GetCurrentRawMusicSample();
+		}
+	}
+
 	void OnDestroy()
 	{
 		// Stop and delete the AudioSource.
@@ -212,11 +227,6 @@ public class KoreographyEditor : EditorWindow
 
 	void OnGUI()
 	{
-		if (Selection.activeGameObject == null)
-		{
-			Selection.activeGameObject = audioSrc.gameObject;
-		}
-
 		// Sanity checking.
 		{
 			// Make sure that we don't have any empty entries or otherwise bad data to worry about.
@@ -243,30 +253,34 @@ public class KoreographyEditor : EditorWindow
 				}
 			}
 
+			// Use for-loops below: Cannot do destructive tasks (Remove()) within foreach loops.
+
 			// Check that our selectedEvents are okay.  They can be deleted out from underneath us by inspecting the event in the editor.
-			foreach (KoreographyEvent evt in selectedEvents)
+			for (int i = selectedEvents.Count - 1; i >= 0; --i)
 			{
+				KoreographyEvent evt = selectedEvents[i];
 				if (evt == null || (editTrack == null || editTrack.GetIDForEvent(evt) < 0))
 				{
-					selectedEvents.Remove(evt);
+					selectedEvents.RemoveAt(i);
 				}
 			}
 
 			// Also check dragSelectedEvents.
-			foreach (KoreographyEvent evt in dragSelectedEvents)
+			for (int i = dragSelectedEvents.Count - 1; i >= 0; --i)
 			{
+				KoreographyEvent evt = dragSelectedEvents[i];
 				if (evt == null || (editTrack == null || editTrack.GetIDForEvent(evt) < 0))
 				{
-					dragSelectedEvents.Remove(evt);
+					dragSelectedEvents.RemoveAt(i);
 				}
 			}
 
 			// Also check clippedEvents(??).
-			foreach (KoreographyEvent evt in clippedEvents)
+			for (int i = clippedEvents.Count - 1; i >= 0; --i)
 			{
-				if (evt == null)
+				if (clippedEvents[i] == null)
 				{
-					clippedEvents.Remove(evt);
+					clippedEvents.RemoveAt(i);
 				}
 			}
 		}
@@ -304,7 +318,6 @@ public class KoreographyEditor : EditorWindow
 					}
 					break;
 				case "UndoRedoPerformed":
-//					selectedEvents.Clear();	// Clean out the old events.
 					Event.current.Use();	// For now, just Use() it so we don't have to go into the rest of the function unnecessarily.
 					break;
 				default:
@@ -347,7 +360,8 @@ public class KoreographyEditor : EditorWindow
 				HandleKeyInput();
 			}
 
-			if (Event.current.isMouse)
+			if (Event.current.isMouse ||
+			    Event.current.type == EventType.Ignore && Event.current.rawType == EventType.MouseUp)
 			{
 				HandleMouseInput();
 			}
@@ -395,7 +409,14 @@ public class KoreographyEditor : EditorWindow
 							}
 							else
 							{
-								menu.AddItem(new GUIContent("Paste"), false, PasteEventsAtLocation, waveDisplay.GetSamplePositionOfPoint(mousePos, displayState));
+								int samplePos = waveDisplay.GetSamplePositionOfPoint(mousePos, displayState);
+
+								if (bSnapTimingToBeat)
+								{
+									samplePos = editKoreo.GetSampleOfNearestBeat(samplePos, snapSubBeatCount);
+								}
+
+								menu.AddItem(new GUIContent("Paste"), false, PasteEventsAtLocation, samplePos);
 								menu.AddDisabledItem(new GUIContent("Paste Payload Only"));
 							}
 						}
@@ -404,6 +425,14 @@ public class KoreographyEditor : EditorWindow
 							menu.AddDisabledItem(new GUIContent("Paste"));
 							menu.AddDisabledItem(new GUIContent("Paste Payload Only"));
 						}
+					}
+
+					menu.AddSeparator(string.Empty);
+
+					// Playback
+					{
+						int samplePos = waveDisplay.GetSamplePositionOfPoint(mousePos, displayState);
+						menu.AddItem(new GUIContent("Play From Here"), false, PlayFromSampleLocation, samplePos);
 					}
 					
 					menu.ShowAsContext();
@@ -431,42 +460,28 @@ public class KoreographyEditor : EditorWindow
 
 			if (newKoreo != editKoreo)
 			{
-				editKoreo = newKoreo;
-
-				if (editKoreo == null)
-				{
-					// Clear out related objects.
-					editTempoSection = null;
-					editTrack = null;
-					waveDisplay = null;
-				}
-				else
-				{
-					// Load in associated metadata.
-
-					// TODO: Assert that the SourceClip is valid (correct Format/Load Type)?
-					if (editKoreo.SourceClip != null)
-					{
-						InitNewClip(editKoreo.SourceClip);
-					}
-
-					// Load in an Edit Track if one exists!
-					KoreographyTrack firstTrack = editKoreo.GetTrackAtIndex(0);
-					if (firstTrack != null)
-					{
-						SetNewEditTrack(firstTrack);
-					}
-
-					editTempoSection = editKoreo.GetTempoSectionAtIndex(0);
-				}
+				SetNewEditKoreo(newKoreo);
 			}
 		}
 
 		if (GUILayout.Button("New Koreography", GUILayout.MaxWidth(110f)))
 		{
 			// Get the save location and file type.  Then massage it for the AssetDatabase functions.
-			string path = EditorUtility.SaveFilePanelInProject("Save New Koreography Asset...", "NewKoreography",
-			                                                   "asset", "Select a location and file name for the new Koreography.");
+			string path = string.Empty;
+			if (assetPath == string.Empty)
+			{
+				path = EditorUtility.SaveFilePanelInProject("Save New Koreography Asset...", "NewKoreography",
+			    	                                               "asset", "Select a location and file name for the new Koreography.");
+			}
+			else
+			{
+				path = EditorUtility.SaveFilePanel("Save New Koreography Asset...", assetPath, "NewKoreography", "asset");
+			}
+
+			if (path != string.Empty)
+			{
+				assetPath = path;		// Store off valid path.
+			}
 			path = path.Replace(Application.dataPath, "Assets");
 			
 			if (!string.IsNullOrEmpty(path) && Path.GetExtension(path) == ".asset" && Path.GetDirectoryName(path).Contains("Assets"))
@@ -474,16 +489,12 @@ public class KoreographyEditor : EditorWindow
 				// Instantiate and init the new Track object.
 				Koreography newKoreo = ScriptableObject.CreateInstance<Koreography>();
 
-				// Clear out the old objects.
-				editTempoSection = null;
-				editTrack = null;
-				waveDisplay = null;
-				
 				// Create the new Track asset and save it!
 				AssetDatabase.CreateAsset(newKoreo, path);
 				AssetDatabase.SaveAssets();
 
-				editKoreo = newKoreo;
+				// Handle all of the associated setup.
+				SetNewEditKoreo(newKoreo);
 			}
 		}
 
@@ -763,7 +774,11 @@ public class KoreographyEditor : EditorWindow
 		if (GUILayout.Button("Load Track", GUILayout.MaxWidth(80f)))
 		{
 			// Get an asset path and massage it to work with the loading mechanisms.
-			string path = EditorUtility.OpenFilePanel("Select an KoreographyTrack Asset...", "", "asset");
+			string path = EditorUtility.OpenFilePanel("Select an KoreographyTrack Asset...", assetPath, "asset");
+			if (path != string.Empty)
+			{
+				assetPath = path;		// Store off valid path.
+			}
 			path = path.Replace(Application.dataPath, "Assets");
 
 			KoreographyTrack loadTrack = AssetDatabase.LoadAssetAtPath(path, typeof(KoreographyTrack)) as KoreographyTrack;
@@ -811,8 +826,21 @@ public class KoreographyEditor : EditorWindow
 		if (GUILayout.Button("New Track", GUILayout.MaxWidth(80f)))
 		{
 			// Get the save location and file type.  Then massage it for the AssetDatabase functions.
-			string path = EditorUtility.SaveFilePanelInProject("Save New KoreographyTrack Asset...", "NewKoreographyTrack",
-			                                                   "asset", "Select a location and file name for the new Track.");
+			string path = string.Empty;
+			if (assetPath == string.Empty)
+			{
+				path = EditorUtility.SaveFilePanelInProject("Save New KoreographyTrack Asset...", "NewKoreographyTrack",
+			    	                                             "asset", "Select a location and file name for the new Track.");
+			}
+			else
+			{
+				path = EditorUtility.SaveFilePanel("Save New KoreographyTrack Asset...", assetPath, "NewKoreographyTrack", "asset");
+			}
+
+			if (path != string.Empty)
+			{
+				assetPath = path;		// Store off valid path.
+			}
 			path = path.Replace(Application.dataPath, "Assets");
 
 			if (!string.IsNullOrEmpty(path) && Path.GetExtension(path) == ".asset" && Path.GetDirectoryName(path).Contains("Assets"))
@@ -854,7 +882,7 @@ public class KoreographyEditor : EditorWindow
 			// Start by checking if an event exists and, if so, continue it!
 			if (EditClip != null && buildEvent != null && IsPlaying())
 			{
-				ContinueNewEvent(GetCurrentRawMusicSample());
+				ContinueNewEvent(GetCurrentEstimatedMusicSample());
 			}
 		}
 
@@ -866,75 +894,82 @@ public class KoreographyEditor : EditorWindow
 		{
 			if (GUILayout.Button(pauseTex))
 			{
-				audioSrc.Pause();
+				PauseAudio();
+
+				// Without this the Play/Pause Button itself takes focus.
+				//  Which is meaningless.
+				FocusWaveDisplayWindow();
 			}
 		}
 		else
 		{
 			if (GUILayout.Button(playTex))
 			{
-				if (audioSrc.clip != EditClip)
-				{
-					audioSrc.clip = EditClip;
-				}
-
-				audioSrc.Play();
-
-				bShowPlayhead = true;
-
-				bIsWaveDisplayFocused = true;
+				// Playback always causes window focus.
+				PlayAudio();
 			}
 		}
 
 		if (GUILayout.Button(stopTex))
 		{
 			StopAudio();
-			bShowPlayhead = false;
+
+			// Without this the Stop Button itself takes focus.  Which is meaningless.
+			FocusWaveDisplayWindow();
 		}
 		
 		GUILayout.FlexibleSpace();
-		
-		if (GUILayout.Toggle(controlMode == ControlMode.Select, new GUIContent("Select", "(a) Put the editor in Selection mode"), EditorStyles.miniButtonLeft, GUILayout.Width(45), GUILayout.Height(20)))
-		{
-			controlMode = ControlMode.Select;
-		}
-		if (GUILayout.Toggle(controlMode == ControlMode.Author, new GUIContent("Draw", "(s) Put the editor in Draw mode"), EditorStyles.miniButtonRight, GUILayout.Width(45), GUILayout.Height(20)))
-		{
-			controlMode = ControlMode.Author;
-		}
 
-		GUILayout.FlexibleSpace();
-
-		// Zoom.
+		// Used for display below here.
+		GUI.changed = false;
 		{
-			EditorGUILayout.LabelField("Zoom", GUILayout.MaxWidth(40f));
-			int newSamplesPerPixel = (int)GUILayout.HorizontalSlider((float)displayState.samplesPerPixel, 1f, (float)maxSamplesPerPixel, GUILayout.MinWidth(250f));
-
-			// Update the scroll position if the samplesPerPixel (zoom factor) changes.
-			if (newSamplesPerPixel != displayState.samplesPerPixel)
+			if (GUILayout.Toggle(controlMode == ControlMode.Select, new GUIContent("Select", "(a) Put the editor in Selection mode"), EditorStyles.miniButtonLeft, GUILayout.Width(45), GUILayout.Height(20)))
 			{
-				SetNewSamplesPerPixel(newSamplesPerPixel);
+				controlMode = ControlMode.Select;
+			}
+			if (GUILayout.Toggle(controlMode == ControlMode.Author, new GUIContent("Draw", "(s) Put the editor in Draw mode"), EditorStyles.miniButtonRight, GUILayout.Width(45), GUILayout.Height(20)))
+			{
+				controlMode = ControlMode.Author;
+			}
+
+			GUILayout.FlexibleSpace();
+
+			// Zoom.
+			{
+				EditorGUILayout.LabelField("Zoom", GUILayout.MaxWidth(40f));
+				int newSamplesPerPixel = (int)GUILayout.HorizontalSlider((float)displayState.samplesPerPixel, 1f, (float)maxSamplesPerPixel, GUILayout.MinWidth(250f));
+
+				// Update the scroll position if the samplesPerPixel (zoom factor) changes.
+				if (newSamplesPerPixel != displayState.samplesPerPixel)
+				{
+					SetNewSamplesPerPixel(newSamplesPerPixel);
+				}
+			}
+
+			GUILayout.FlexibleSpace();
+
+			// Payload selection.
+			EditorGUIUtility.labelWidth = 50f;
+			EditorGUIUtility.fieldWidth = 100f;
+
+			// +1 to string index input and -1 from string index output.  This keeps the index properly
+			//  in the range of the actual Type list which DOESN'T have the "No Payload" option.
+			currentPayloadTypeIdx = EditorGUILayout.Popup("Payload", currentPayloadTypeIdx + 1, payloadTypeNames.ToArray()) - 1;
+
+			// Runtime creation mode.
+			if (GUILayout.Toggle(bCreateOneOff, new GUIContent("OneOff", "(z) Created events are mapped to a single sample"), EditorStyles.miniButtonLeft, GUILayout.Width(45), GUILayout.Height(20)))
+			{
+				bCreateOneOff = true;
+			}
+			if (GUILayout.Toggle(!bCreateOneOff, new GUIContent("Span", "(x) Created events span multiple samples"), EditorStyles.miniButtonRight, GUILayout.Width(45), GUILayout.Height(20)))
+			{
+				bCreateOneOff = false;
 			}
 		}
-
-		GUILayout.FlexibleSpace();
-
-		// Payload selection.
-		EditorGUIUtility.labelWidth = 50f;
-		EditorGUIUtility.fieldWidth = 100f;
-
-		// +1 to string index input and -1 from string index output.  This keeps the index properly
-		//  in the range of the actual Type list which DOESN'T have the "No Payload" option.
-		currentPayloadTypeIdx = EditorGUILayout.Popup("Payload", currentPayloadTypeIdx + 1, payloadTypeNames.ToArray()) - 1;
-
-		// Runtime creation mode.
-		if (GUILayout.Toggle(bCreateInstantaneous, new GUIContent("Inst", "(z) Created events are mapped to a single sample"), EditorStyles.miniButtonLeft, GUILayout.Width(35), GUILayout.Height(20)))
+		if (GUI.changed)
 		{
-			bCreateInstantaneous = true;
-		}
-		if (GUILayout.Toggle(!bCreateInstantaneous, new GUIContent("Span", "(x) Created events span multiple samples"), EditorStyles.miniButtonRight, GUILayout.Width(35), GUILayout.Height(20)))
-		{
-			bCreateInstantaneous = false;
+			FocusWaveDisplayWindow();
+			GUI.changed = false;
 		}
 
 		EditorGUILayout.EndHorizontal();
@@ -944,10 +979,10 @@ public class KoreographyEditor : EditorWindow
 			// Wave Display Area.
 			if (waveDisplay != null)
 			{
-				displayState.playheadSamplePosition = GetCurrentRawMusicSample();
+				displayState.playheadSamplePosition = GetCurrentEstimatedMusicSample();
 
 				// Handle metadata.
-				if (IsPlaying())
+				if (IsPlaying() && bScrollWithPlayhead)
 				{
 					int sampleDistanceToPlayhead = WaveDisplay.pixelDistanceToPlayheadMarker * displayState.samplesPerPixel;
 					
@@ -980,7 +1015,18 @@ public class KoreographyEditor : EditorWindow
 
 					int windowHeight = 400;
 					int windowWidth = GetWidthOfWaveDisplayWindow();
-					int contentWidth = (EditClip != null) ? EditClip.samples / displayState.samplesPerPixel : windowWidth;
+					int contentWidth = windowWidth;
+
+					if (EditClip != null)
+					{
+						contentWidth = EditClip.samples / displayState.samplesPerPixel;
+
+						// Allow us to scrub all the way to the end, given the pixelDistanceToPlayheadMarker
+						if (IsPlaying() && bScrollWithPlayhead)
+						{
+							contentWidth += (windowWidth - WaveDisplay.pixelDistanceToPlayheadMarker);
+						}
+					}
 
 					GUI.skin.scrollView.margin = GUI.skin.box.margin;
 
@@ -992,9 +1038,12 @@ public class KoreographyEditor : EditorWindow
 					{
 						scrollPosition = newScrollPos;
 
-						if (IsPlaying() && scrollPosition.x < contentWidth - windowWidth)
+						if (IsPlaying() && bScrollWithPlayhead &&
+						    scrollPosition.x < contentWidth - windowWidth && 		// If we get to full don't continuously reset the timeSamples.
+						    scrollPosition.x > 256 / displayState.samplesPerPixel)	// If we get to the beginning, don't continuously reset the timeSamples.
 						{
-							audioSrc.timeSamples = (int)(scrollPosition.x * displayState.samplesPerPixel);
+							// If we're auto scrolling, we need to keep the distToPlayheadMarker in mind, otherwise it will rewind over time.
+							audioSrc.timeSamples = (int)((scrollPosition.x + WaveDisplay.pixelDistanceToPlayheadMarker) * displayState.samplesPerPixel);
 						}
 					}
 
@@ -1005,7 +1054,16 @@ public class KoreographyEditor : EditorWindow
 
 					// Integer division.  This keeps us "samples-per-pixel" aligned so we don't get odd reshaping of the waveform as the read head moves.
 					displayState.firstSamplePackToDraw = (displayState.firstSamplePackToDraw / displayState.samplesPerPixel) * displayState.samplesPerPixel;
-
+#if UNITY_5_0
+					// Make sure we fill up with AudioData if it's finally loaded.
+					if (Event.current.type == EventType.Repaint &&
+					    !waveDisplay.HasAudioData() &&
+					    EditClip != null &&
+					    EditClip.isReadyToPlay)  // Background loading is finished!
+					{
+						waveDisplay.SetAudioData(EditClip);
+					}
+#endif
 					// Send a COPY of the displayState so other folks can't change it?!
 					waveDisplay.Draw(waveBoxRect, displayState, editKoreo, bShowPlayhead, (dragStartPos == dragEndPos) ? selectedEvents : eventsToHighlight);
 
@@ -1041,8 +1099,7 @@ public class KoreographyEditor : EditorWindow
 							output = string.Format("sample {0:0}", displayState.firstSamplePackToDraw);
 							break;
 						case LCDDisplayMode.MusicTime:
-							output = string.Format("{0:0'm | '}", editKoreo.GetMeasureTimeFromSampleTime(displayState.firstSamplePackToDraw) + 1) +
-									 string.Format("{0:0.000'b'}", editKoreo.GetBeatCountInMeasureFromSampleTime(displayState.firstSamplePackToDraw) + 1);
+							output = GetMusicTimeForDisplayFromSample(displayState.firstSamplePackToDraw);
 							break;
 						case LCDDisplayMode.SolarTime:
 							solarTime = System.TimeSpan.FromSeconds((double)displayState.firstSamplePackToDraw / (double)EditClip.frequency);
@@ -1069,8 +1126,7 @@ public class KoreographyEditor : EditorWindow
 								output = string.Format("sample {0:0}", displayState.playheadSamplePosition);
 								break;
 							case LCDDisplayMode.MusicTime:
-								output = string.Format("{0:0'm | '}", editKoreo.GetMeasureTimeFromSampleTime(displayState.playheadSamplePosition) + 1) +
-				                         string.Format("{0:0.000'b'}", editKoreo.GetBeatCountInMeasureFromSampleTime(displayState.playheadSamplePosition) + 1);
+								output = GetMusicTimeForDisplayFromSample(displayState.playheadSamplePosition);
 								break;
 							case LCDDisplayMode.SolarTime:
 								solarTime = System.TimeSpan.FromSeconds((double)displayState.playheadSamplePosition / (double)EditClip.frequency);
@@ -1099,8 +1155,7 @@ public class KoreographyEditor : EditorWindow
 							output = string.Format("sample {0:0}", endSample);
 							break;
 						case LCDDisplayMode.MusicTime:
-							output = string.Format("{0:0'm | '}", editKoreo.GetMeasureTimeFromSampleTime(endSample) + 1) +
-			                         string.Format("{0:0.000'b'}", editKoreo.GetBeatCountInMeasureFromSampleTime(endSample) + 1);
+							output = GetMusicTimeForDisplayFromSample(endSample);
 							break;
 						case LCDDisplayMode.SolarTime:
 							 solarTime = System.TimeSpan.FromSeconds((double)endSample / (double)EditClip.frequency);
@@ -1136,11 +1191,17 @@ public class KoreographyEditor : EditorWindow
 
 			GUILayout.BeginHorizontal();
 
+			GUI.changed = false;
 			bSnapTimingToBeat = EditorGUILayout.ToggleLeft("Snap To Beat", bSnapTimingToBeat, GUILayout.Width(84));
-			if (!bSnapTimingToBeat && buildEvent != null && buildEvent.IsInstantaneous() && IsPlaying())
+			if (!bSnapTimingToBeat && buildEvent != null && buildEvent.IsOneOff() && IsPlaying())
 			{
 				// Clear the one off guy!  This will allow us to not do the silly every-frame repeating!
 				buildEvent = null;
+			}
+			if (GUI.changed)
+			{
+				FocusWaveDisplayWindow();
+				GUI.changed = false;
 			}
 			
 			EditorGUIUtility.labelWidth = 30;
@@ -1154,11 +1215,20 @@ public class KoreographyEditor : EditorWindow
 			// This will push the toggles to the right!
 			GUILayout.FlexibleSpace();
 
-			EditorGUIUtility.labelWidth = 95f;
-			audioSrc.volume = EditorGUILayout.Slider("Playback Volume", audioSrc.volume, 0.0f, 1f);
+			GUI.changed = false;
+			EditorGUIUtility.labelWidth = 68f;
+			bScrollWithPlayhead = EditorGUILayout.Toggle(new GUIContent("Auto Scroll", "Whether or not the view automatically scrolls with audio playback."), bScrollWithPlayhead);
+			if (GUI.changed)
+			{
+				FocusWaveDisplayWindow();
+				GUI.changed = false;
+			}
+
+			EditorGUIUtility.labelWidth = 50f;
+			audioSrc.volume = EditorGUILayout.Slider(new GUIContent("Volume", "Volume of the Audio Clip during playback."), audioSrc.volume, 0.0f, 1f);
 			EditorGUIUtility.labelWidth = 0f;
 			EditorGUIUtility.labelWidth = 40f;
-			audioSrc.pitch = EditorGUILayout.Slider("Speed", audioSrc.pitch, 0.05f, 5f);
+			audioSrc.pitch = EditorGUILayout.Slider(new GUIContent("Speed", "How fast the Audio Clip should play. Changes pitch."), audioSrc.pitch, 0.05f, 5f);
 			EditorGUIUtility.labelWidth = 0f;
 
 			GUI.enabled = displayState.samplesPerPixel != 1;
@@ -1171,6 +1241,7 @@ public class KoreographyEditor : EditorWindow
 				displayState.displayType = WaveDisplayType.Both;
 			}
 
+			GUI.changed = false;
 			// Display toggles (this could alternatively be done with a SelectionGrid).
 			if (GUILayout.Toggle(displayState.displayType == WaveDisplayType.MinMax,
 			                     new GUIContent("MinMax", "Vertical lines depict the minimum and maximum values of the sample range of a given pixel location."),
@@ -1189,6 +1260,11 @@ public class KoreographyEditor : EditorWindow
 			                     GUI.skin.GetStyle("radio"), GUILayout.Width(50)))
 			{
 				displayState.displayType = WaveDisplayType.Both;
+			}
+			if (GUI.changed)
+			{
+				FocusWaveDisplayWindow();
+				GUI.changed = false;
 			}
 
 			GUI.enabled = true;
@@ -1489,22 +1565,87 @@ public class KoreographyEditor : EditorWindow
 				editTrack.EnsureEventOrder();
 			}
 		}
-	}
 
+		// Wrap up.  All other controls have had their chance.  Left-over keys can be used here.
+		if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+		{
+			// Use the escape key to push focus to the WaveDisplay!
+			FocusWaveDisplayWindow();
+			Event.current.Use();
+		}
+	}
+	
 	bool IsAudioClipValid(AudioClip clip)
 	{
 		// We need to verify that we can call AudioClip.GetData().  According to the
 		//  documentaiton (http://docs.unity3d.com/ScriptReference/AudioClip.GetData.html),
-		//  only assets set to "DecompressOnLoad" should be viable.  However, based on
-		//  internal testing, "StreamFromDisc" appears to also work.  The Native format
-		//  (WAV) only supports those two options so we simply allow them.  Otherwise,
-		//  simply make sure we're not set to Compressed.
+		//  only assets set to "DecompressOnLoad" should be viable.
 		AudioImporter clipImporter = AudioImporter.GetAtPath(AssetDatabase.GetAssetPath(clip)) as AudioImporter;
-		
+
+#if UNITY_5_0
+		// Internal testing shows that AudioClips with Format "PCM" and LoadType
+		//  "CompressedInMemory" also works.  Allow this as well.
+		return clipImporter.loadType == AudioClipLoadType.DecompressOnLoad ||
+			  (clipImporter.loadType == AudioClipLoadType.CompressedInMemory && clipImporter.format == AudioClipFormat.PCM);
+#else
+		//  Internal testing shows that LoadType "StreamFromDisc" also works.  The Native 
+		//   format (WAV) only supports those two options so we simply allow them.
+		//   Otherwise, simply make sure we're not set to Compressed.
 		return clipImporter.format == AudioImporterFormat.Native ||
-			   clipImporter.loadType != AudioImporterLoadType.CompressedInMemory;
+			clipImporter.loadType != AudioImporterLoadType.CompressedInMemory;
+#endif
 	}
 
+	void SetNewEditKoreo(Koreography newKoreo)
+	{
+#if UNITY_4_5 || UNITY_4_6
+		// This ensures that we don't force lots of errors to be thrown by
+		//  loading up the Curve Editor.  Fixed in Unity 5!
+		if (Selection.activeObject == null || Selection.activeObject == editKoreo)
+		{
+			Selection.activeObject = newKoreo;
+		}
+#endif
+		editKoreo = newKoreo;
+		
+		if (editKoreo == null)
+		{
+			// Clear out related objects.
+			editTempoSection = null;
+			editTrack = null;
+			waveDisplay = null;
+		}
+		else		// Load in associated metadata.
+		{
+			// TODO: Assert that the SourceClip is valid (correct Format/Load Type)?
+			if (editKoreo.SourceClip != null)
+			{
+				InitNewClip(editKoreo.SourceClip);
+			}
+			else
+			{
+				waveDisplay = null;
+			}
+			
+			// Load in an Edit Track if one exists!
+			KoreographyTrack firstTrack = editKoreo.GetTrackAtIndex(0);
+			if (firstTrack != null)
+			{
+				SetNewEditTrack(firstTrack);
+			}
+			else
+			{
+				// No track in this Koreography.  Clear out, including selections!
+				editTrack = null;
+				selectedEvents.Clear();
+				dragSelectedEvents.Clear();
+			}
+
+			// All Koreography objects have an editTempoSection.
+			editTempoSection = editKoreo.GetTempoSectionAtIndex(0);
+		}
+	}
+	
 	void SetNewEditTrack(KoreographyTrack newTrack)
 	{
 		editTrack = newTrack;
@@ -1524,14 +1665,113 @@ public class KoreographyEditor : EditorWindow
 		StopAudio();
 
 		// New clip.  Reinitialize the WaveDisplay.
-		waveDisplay = new WaveDisplay(newClip);
+		waveDisplay = new WaveDisplay();
+
+#if UNITY_5_0
+		if (!newClip.preloadAudioData)
+		{
+			newClip.LoadAudioData();
+		}
+
+		if (newClip.isReadyToPlay)
+		{
+			waveDisplay.SetAudioData(newClip);
+		}
+#else
+		waveDisplay.SetAudioData(newClip);
+#endif
+
 		maxSamplesPerPixel = waveDisplay.GetMaximumSamplesPerPixel(newClip.samples, GetWidthOfWaveDisplayWindow());
+	}
+
+	void PlayAudio(int sampleTime = -1)
+	{
+		if (audioSrc.clip != EditClip)
+		{
+			audioSrc.clip = EditClip;
+		}
+
+		if (sampleTime >= 0)
+		{
+			audioSrc.timeSamples = sampleTime;
+		}
+		
+		audioSrc.Play();
+		
+		bShowPlayhead = true;
+
+		FocusWaveDisplayWindow();
+	}
+
+	void PauseAudio()
+	{
+		audioSrc.Pause();
 	}
 
 	void StopAudio()
 	{
 		audioSrc.Stop();
+
 		audioSrc.timeSamples = 0;
+
+		bShowPlayhead = false;
+	}
+
+	void ScanToSample(int sample)
+	{
+		if (EditClip != null)
+		{
+			sample = Mathf.Clamp(sample, 0, EditClip.samples);
+			audioSrc.timeSamples = sample;
+		}
+	}
+
+	void ScanAheadOneMeasure()
+	{
+		if (editKoreo != null)
+		{
+			int curSample = GetCurrentEstimatedMusicSample();
+
+			int measureNum = Mathf.FloorToInt(editKoreo.GetMeasureTimeFromSampleTime(curSample));
+
+			float beatInMeasure = editKoreo.GetBeatCountInMeasureFromSampleTime(curSample);
+			if (beatInMeasure <= editKoreo.GetTempoSectionForSample(curSample).BeatsPerMeasure - 1)
+			{
+				// Get the sample time from the measure of +1.
+				ScanToSample(editKoreo.GetSampleTimeFromMeasureTime(measureNum + 1));
+			}
+			else
+			{
+				// Skip beyond the next measure to the one following.
+				ScanToSample(editKoreo.GetSampleTimeFromMeasureTime(measureNum + 2));
+			}
+
+			bShowPlayhead = true;	// Potentially converts from stopped to paused.
+		}
+	}
+
+	void ScanBackOneMeasure()
+	{
+		if (editKoreo != null)
+		{
+			int curSample = GetCurrentEstimatedMusicSample();
+			
+			int measureNum = Mathf.FloorToInt(editKoreo.GetMeasureTimeFromSampleTime(curSample));
+			
+			float beatInMeasure = editKoreo.GetBeatCountInMeasureFromSampleTime(curSample);
+			if (beatInMeasure >= 1)
+			{
+				// Get the sample time from the current measure.
+				ScanToSample(editKoreo.GetSampleTimeFromMeasureTime(measureNum));
+			}
+			else
+			{
+				// Skip completely to the previous measure.
+				ScanToSample(editKoreo.GetSampleTimeFromMeasureTime(measureNum - 1));
+			}
+
+			bShowPlayhead = true;	// Potentially converts from stopped to paused.
+		}
 	}
 
 	bool IsPlaying()
@@ -1539,9 +1779,25 @@ public class KoreographyEditor : EditorWindow
 		return audioSrc.isPlaying;
 	}
 
+	bool IsStopped()
+	{
+		return !IsPlaying() && (audioSrc.timeSamples == 0) && !bShowPlayhead;
+	}
+
+	bool IsPaused()
+	{
+		return !IsPlaying() && bShowPlayhead;
+	}
+
 	bool IsSelecting()
 	{
 		return dragStartPos != dragEndPos;
+	}
+
+	void FocusWaveDisplayWindow()
+	{
+		bIsWaveDisplayFocused = true;
+		GUI.FocusControl("");
 	}
 
 	int GetWidthOfWaveDisplayWindow()
@@ -1549,15 +1805,19 @@ public class KoreographyEditor : EditorWindow
 		return (int)position.width - GUI.skin.box.margin.horizontal;
 	}
 
-	// TODO: Implement this.  Music is consumed in discreet chunks by the audio driver.
-	//  If updates occur so quickly that multiple frames report the same audio position but the music is still
-	//  "playing" then we will do our best to extrapolate how many samples have been read between "now" and the last
+	// Music is consumed in discreet chunks by the audio driver.  If updates occur so quickly that
+	//  multiple frames report the same audio position but the music is still "playing" then we will
+	//  do our best to extrapolate how many samples have been read between "now" and the last
 	//  reported change (based on bitrate of music and CPU clock time differences).
+	// The actual calculation for this is done in Update().  This ensures that we don't get 
+	//  recalculated multiple times within a single frame (which could have consequences for drawing
+	//  a concistent view of the WaveForm.
 	int GetCurrentEstimatedMusicSample()
 	{
-		return 0;
+		return estimatedSampleTime;
 	}
-	
+
+	// Gets the data from the AudioSource itself.
 	int GetCurrentRawMusicSample()
 	{
 		return audioSrc.timeSamples;
@@ -1596,7 +1856,7 @@ public class KoreographyEditor : EditorWindow
 		AttachPayloadToEvent(newEvt);
 		newEvt.StartSample = startSampleLoc;
 
-		if (!bCreateInstantaneous)
+		if (!bCreateOneOff)
 		{
 			newEvt.EndSample += 1;			// Spans have a span of at least 1.
 		}
@@ -1618,11 +1878,11 @@ public class KoreographyEditor : EditorWindow
 		// Might not actually add it.  Don't worry for now.
 		if (editTrack.AddEvent(buildEvent))
 		{
-			// This only needs to happen here for Instantaneous events.
+			// This only needs to happen here for OneOff events.
 			EditorUtility.SetDirty(editTrack);
 		}
 
-		if (bCreateInstantaneous && !bSnapTimingToBeat)
+		if (bCreateOneOff && !bSnapTimingToBeat)
 		{
 			buildEvent = null;
 		}
@@ -1633,13 +1893,13 @@ public class KoreographyEditor : EditorWindow
 		// TODO: Check for beat overlap?
 
 		// EndSample is set with StartSample.  If StartSample > curSampleTime, so is EndSample.
-		//  Update EndSample if we're beyond StartSample and *NOT* in Instantaneous mode.
+		//  Update EndSample if we're beyond StartSample and *NOT* in OneOff mode.
 		if (buildEvent.StartSample < samplePos)
 		{
-			// In the Instantaneous case, we should add events we may have missed since the last event was added!
-			if (bCreateInstantaneous)
+			// In the OneOff case, we should add events we may have missed since the last event was added!
+			if (bCreateOneOff)
 			{
-				AddBeatAlignedInstantaneousEventsToRange(buildEvent.StartSample, samplePos, snapSubBeatCount);
+				AddBeatAlignedOneOffEventsToRange(buildEvent.StartSample, samplePos, snapSubBeatCount);
 			}
 			else
 			{
@@ -1648,9 +1908,9 @@ public class KoreographyEditor : EditorWindow
 		}
 		else if (buildEvent.StartSample > samplePos)
 		{
-			if (bCreateInstantaneous)
+			if (bCreateOneOff)
 			{
-				AddBeatAlignedInstantaneousEventsToRange(samplePos, buildEvent.StartSample, snapSubBeatCount);
+				AddBeatAlignedOneOffEventsToRange(samplePos, buildEvent.StartSample, snapSubBeatCount);
 			}
 			else
 			{
@@ -1670,10 +1930,10 @@ public class KoreographyEditor : EditorWindow
 		{
 			int beatSample = editKoreo.GetSampleOfNearestBeat(rawSamplePos, snapSubBeatCount);
 
-			if (bCreateInstantaneous)
+			if (bCreateOneOff)
 			{
-				// Add intermediary Instantaneous events!
-				AddBeatAlignedInstantaneousEventsToRange(buildEvent.StartSample, rawSamplePos, snapSubBeatCount);
+				// Add intermediary OneOff events!
+				AddBeatAlignedOneOffEventsToRange(buildEvent.StartSample, rawSamplePos, snapSubBeatCount);
 			}
 			else
 			{
@@ -1705,8 +1965,8 @@ public class KoreographyEditor : EditorWindow
 						buildEvent.EndSample = beatSample;
 					}
 
-					// We may have snapped ourselves into Instantaneous.  Detect and adjust for this.
-					if (buildEvent.IsInstantaneous())
+					// We may have snapped ourselves into OneOff.  Detect and adjust for this.
+					if (buildEvent.IsOneOff())
 					{
 						buildEvent.EndSample = editKoreo.GetSampleOfNearestBeat(buildEvent.StartSample + (int)editKoreo.GetSamplesPerBeat(buildEvent.EndSample, snapSubBeatCount));
 					}
@@ -1767,14 +2027,14 @@ public class KoreographyEditor : EditorWindow
 		}
 	}
 
-	// Adds a new beat-aligned Instantaneous event to the current track in the following manner: (startSample, endSample].
-	void AddBeatAlignedInstantaneousEventsToRange(int startSample, int endSample, int subBeats = 0)
+	// Adds a new beat-aligned OneOff event to the current track in the following manner: (startSample, endSample].
+	void AddBeatAlignedOneOffEventsToRange(int startSample, int endSample, int subBeats = 0)
 	{
 		bool bDidAddAnEvent = false;
 
 		for (int i = startSample + (int)editKoreo.GetSamplesPerBeat(startSample, subBeats); i <= endSample; i = i + (int)editKoreo.GetSamplesPerBeat(i, subBeats))
 		{
-			// This also iterates our current "buildEvent" to the most recent Instantaneous made!
+			// This also iterates our current "buildEvent" to the most recent OneOff made!
 			buildEvent = GetNewEvent(editKoreo.GetSampleOfNearestBeat(i, subBeats));
 
 			if (editTrack.AddEvent(buildEvent))
@@ -1815,7 +2075,9 @@ public class KoreographyEditor : EditorWindow
 		    Event.current.keyCode != KeyCode.None &&
 		    bIsWaveDisplayFocused)
 		{
-			if (Event.current.keyCode == KeyCode.Space)
+			if (Event.current.keyCode == KeyCode.KeypadEnter ||
+			    Event.current.keyCode == KeyCode.Return ||
+			    Event.current.keyCode == KeyCode.E)
 			{
 				if (editTrack != null && IsPlaying())
 				{
@@ -1823,7 +2085,7 @@ public class KoreographyEditor : EditorWindow
 					{
 						if (buildEvent == null)
 						{
-							BeginNewEvent(GetCurrentRawMusicSample());
+							BeginNewEvent(GetCurrentEstimatedMusicSample());
 						}
 
 						Event.current.Use();
@@ -1832,11 +2094,27 @@ public class KoreographyEditor : EditorWindow
 					{
 						if (buildEvent != null)
 						{
-							EndNewEvent(GetCurrentRawMusicSample());
+							EndNewEvent(GetCurrentEstimatedMusicSample());
 							Event.current.Use();
 						}
 					}
 				}
+			}
+			else if (Event.current.keyCode == KeyCode.Space && Event.current.type == EventType.KeyDown)
+			{
+				if (Event.current.shift)
+				{
+					StopAudio();
+				}
+				else if (IsPlaying())
+				{
+					PauseAudio();
+				}
+				else
+				{
+					PlayAudio();
+				}
+				Event.current.Use();
 			}
 			else if (Event.current.keyCode == KeyCode.A && Event.current.type == EventType.KeyDown)
 			{
@@ -1850,12 +2128,12 @@ public class KoreographyEditor : EditorWindow
 			}
 			else if (Event.current.keyCode == KeyCode.Z && Event.current.type == EventType.KeyDown)
 			{
-				bCreateInstantaneous = true;
+				bCreateOneOff = true;
 				Event.current.Use();
 			}
 			else if (Event.current.keyCode == KeyCode.X && Event.current.type == EventType.KeyDown)
 			{
-				bCreateInstantaneous = false;
+				bCreateOneOff = false;
 				Event.current.Use();
 			}
 			else if ((Event.current.keyCode == KeyCode.Delete || Event.current.keyCode == KeyCode.Backspace) &&
@@ -1867,17 +2145,37 @@ public class KoreographyEditor : EditorWindow
 			}
 			else if (Event.current.keyCode == KeyCode.V && Event.current.type == EventType.KeyDown &&
 			         Event.current.shift &&
-			         #if UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX
 			         Event.current.command)
-					 #else
+#else
 					 Event.current.control)
-					 #endif
+#endif
 			{
 				if (clippedEvents.Count > 0 && selectedEvents.Count > 0 && bIsWaveDisplayFocused && waveDisplay != null)
 				{
 					PastePayloadToSelectedEvents();
 					Event.current.Use();
 				}
+			}
+			else if (Event.current.keyCode == KeyCode.LeftArrow && Event.current.type == EventType.KeyDown)
+			{
+				ScanBackOneMeasure();
+				Event.current.Use();
+			}
+			else if (Event.current.keyCode == KeyCode.RightArrow && Event.current.type == EventType.KeyDown)
+			{
+				ScanAheadOneMeasure();
+				Event.current.Use();
+			}
+			else if (Event.current.keyCode == KeyCode.DownArrow && Event.current.type == EventType.KeyDown)
+			{
+				audioSrc.pitch = Mathf.Max(0.1f, Mathf.Round((audioSrc.pitch - 0.1f) * 10f) / 10f);
+				Event.current.Use();
+			}
+			else if (Event.current.keyCode == KeyCode.UpArrow && Event.current.type == EventType.KeyDown)
+			{
+				audioSrc.pitch = Mathf.Min(5f, Mathf.Round((audioSrc.pitch + 0.1f) * 10f) / 10f);
+				Event.current.Use();
 			}
 		}
 	}
@@ -1906,8 +2204,7 @@ public class KoreographyEditor : EditorWindow
 			Vector2 mousePos = Event.current.mousePosition;
 			if (waveDisplay != null && waveDisplay.IsClickableAtLoc(mousePos))
 			{
-				bIsWaveDisplayFocused = true;
-				GUI.FocusControl("");
+				FocusWaveDisplayWindow();
 
 				KoreographyEvent clickEvt = waveDisplay.GetEventAtLoc(mousePos);
 
@@ -1950,7 +2247,7 @@ public class KoreographyEditor : EditorWindow
 				Repaint();
 			}
 		}
-		else if (Event.current.type == EventType.MouseUp && Event.current.button == 0)
+		else if ((Event.current.type == EventType.MouseUp || Event.current.rawType == EventType.MouseUp) && Event.current.button == 0)
 		{
 			// Clear the edit mode, no matter where we are.
 			eventEditMode = EventEditMode.None;
@@ -2000,6 +2297,38 @@ public class KoreographyEditor : EditorWindow
 		return bInLCD;
 	}
 
+	string GetMusicTimeForDisplayFromSample(int sample)
+	{
+		float beat = editKoreo.GetBeatCountInMeasureFromSampleTime(sample) + 1f;
+		float measure = Mathf.Floor(editKoreo.GetMeasureTimeFromSampleTime(sample) + 1f);
+
+		// This appears to be necessary because of floating point rounding errors with sample
+		//  math precision (probably?).  May need to use a double to get this precisely correct.
+		//  Or some other math is entirely off...
+		{
+			TempoSectionDef curSection = editKoreo.GetTempoSectionForSample(sample);
+			float nextSampleBeat = Mathf.Floor(beat + (1f / curSection.SamplesPerBeat));
+			// Normally we don't care about this because rounding handles things.  However, when we're less than one
+			//  sample away from the next measure boundary we need to be super careful.  Currently rounding rules
+			//  work in such a way as to set the measure boundary to the sample that closest to the boundary, even if
+			//  that sample is *below* the measure boundary.  This should probably be changed such that the the *next*
+			//  sample after the between-sample measure boundary is used as the first measure sample, rather than the
+			//  'closest'.
+			if (nextSampleBeat > Mathf.Floor(beat) && nextSampleBeat > curSection.BeatsPerMeasure)
+			{
+				beat = 1f;
+				measure++;
+			}
+			
+			// Handle String format rounding rules.  This will ensure that we have a precision of
+			//  exactly 3 decimal positions, forestalling rounding.
+			beat = Mathf.Round(beat * 1000f) / 1000f;
+		}
+
+		return string.Format("{0:0'm | '}", measure) +
+			   string.Format("{0:0.000'b'}", beat);
+	}
+	
 	Rect GetDragAreaRect()
 	{
 		float minX = Mathf.Min(dragStartPos.x, dragEndPos.x);
@@ -2142,11 +2471,11 @@ public class KoreographyEditor : EditorWindow
 						selectedEvents.Add(selectedEvent);
 					}
 				}
-				#if UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX
 				else if (Event.current.command)	// Command (Mac) is add/remove unique.
-				#else
+#else
 				else if (Event.current.control)	// Control (other) is add/remove unique.
-				#endif
+#endif
 				{
 					if (selectedEvents.Contains(selectedEvent))
 					{
@@ -2182,11 +2511,11 @@ public class KoreographyEditor : EditorWindow
 			{
 				// Remove the selection.
 				if (!(Event.current.shift ||
-					  #if UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX
 				      Event.current.command)
-					  #else
+#else
 				      Event.current.control)
-					  #endif
+#endif
 				   )
 				{
 					selectedEvents.Clear();
@@ -2206,7 +2535,7 @@ public class KoreographyEditor : EditorWindow
 				{
 					KoreographyEvent newEvt = GetNewEvent(waveDisplay.GetSamplePositionOfPoint(mousePos, displayState));
 
-					// Only create Instantaneous events on Double click.
+					// Only create OneOff events on Double click.
 					newEvt.EndSample = newEvt.StartSample;
 
 					if (bSnapTimingToBeat)
@@ -2218,7 +2547,7 @@ public class KoreographyEditor : EditorWindow
 
 					if (editTrack.AddEvent(newEvt))
 					{
-						// This only needs to happen here for Instantaneous events.
+						// This only needs to happen here for OneOff events.
 						EditorUtility.SetDirty(editTrack);
 					}
 				}
@@ -2250,11 +2579,11 @@ public class KoreographyEditor : EditorWindow
 			{
 				eventsToHighlight = eventsToHighlight.Union(dragSelectedEvents).ToList();
 			}
-			#if UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX
 			else if (Event.current.command)	// Command (Mac) is add/remove unique.
-			#else
+#else
 			else if (Event.current.control)	// Control (other) is add/remove unique.
-			#endif
+#endif
 			{
 				eventsToHighlight = eventsToHighlight.Except(dragSelectedEvents).ToList();
 			}
@@ -2280,11 +2609,11 @@ public class KoreographyEditor : EditorWindow
 				{
 					selectedEvents = selectedEvents.Union(dragSelectedEvents).ToList();
 				}
-				#if UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX
 				else if (Event.current.command)	// Command (Mac) is add/remove unique.
-				#else
+#else
 				else if (Event.current.control)	// Control (other) is add/remove unique.
-				#endif
+#endif
 				{
 					selectedEvents = selectedEvents.Except(dragSelectedEvents).ToList();
 				}
@@ -2307,7 +2636,15 @@ public class KoreographyEditor : EditorWindow
 
 	void MouseDownDrawMode()
 	{
-		BeginNewEvent(waveDisplay.GetSamplePositionOfPoint(Event.current.mousePosition, displayState));
+		// Clear out the selected events in draw mode before drawing.
+		if (selectedEvents.Count > 0)
+		{
+			selectedEvents.Clear();
+		}
+		else
+		{
+			BeginNewEvent(waveDisplay.GetSamplePositionOfPoint(Event.current.mousePosition, displayState));
+		}
 
 		Event.current.Use();
 		Repaint();
@@ -2451,6 +2788,11 @@ public class KoreographyEditor : EditorWindow
 
 			editTrack.AddEvent(newEvt);
 		}
+	}
+
+	void PlayFromSampleLocation(System.Object samplePosAsObj)
+	{
+		PlayAudio((int)samplePosAsObj);
 	}
 
 	#endregion
