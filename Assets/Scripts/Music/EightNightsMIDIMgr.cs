@@ -82,7 +82,7 @@ public class EightNightsMIDIMgr : MonoBehaviour
       if (!EightNightsAudioMgr.Instance.ShowTestUI)
          return;
 
-      float HSpacing = 30;
+      float HSpacing = 135;
       Vector2 badgeSize = new Vector2(120, 120);
 
       Vector2 startPos = new Vector2((.5f * Screen.width) - (MIDIConfigs.Length*badgeSize.x*.5f) - 50, .5f * Screen.height);

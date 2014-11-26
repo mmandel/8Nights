@@ -110,6 +110,24 @@ public class EightNightsAudioMgr : MonoBehaviour
       return _peakGroupState.LoopState != StemLoopState.Off;
    }
 
+   void ResetAllStems()
+   {
+      foreach (GroupStateData g in _groupState)
+      {
+         g.LoopState = StemLoopState.Off;
+      }
+      _peakGroupState.LoopState = StemLoopState.Off;
+   }
+
+   void ResetAllStemTimestamps()
+   {
+      foreach (GroupStateData g in _groupState)
+      {
+         g.CaptureTimestamp();
+      }
+      _peakGroupState.CaptureTimestamp();
+   }
+
    void OnGUI()
    {
       if (!ShowTestUI)
@@ -166,6 +184,62 @@ public class EightNightsAudioMgr : MonoBehaviour
          if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 4 * buttonVSpacing, groupSize.x - 20, 20), "Group 4"))
          {
             TriggerGroup(EightNightsMgr.GroupID.RiftGroup4);
+         }
+
+      //kill all button
+         startPos.y += 4 * buttonVSpacing  + 40;
+         startPos.x -= 55;
+         if (GUI.Button(new Rect(startPos.x, startPos.y, groupSize.x - 20, 20), "Reset All"))
+         {
+            ResetAllStems();
+         }
+
+      // text fields for stem tuning params
+         startPos.x = Screen.width * .5f - 150;
+         startPos.y = 10;
+         groupSize = new Vector2(200, buttonVSpacing * 3 + 30);
+         GUI.Box(new Rect(startPos.x, startPos.y, groupSize.x, groupSize.y), "Stem Behavior");
+         //Attack Time
+         startPos.y += buttonVSpacing;
+         GUI.Label(new Rect(startPos.x + 10, startPos.y, groupSize.x - 50, 20), "Attack Time: ");
+         string attackStr = StemAttackTime.ToString();
+         string newAttackStr = GUI.TextField(new Rect(startPos.x + 10 + groupSize.x - 70, startPos.y, 50, 20), attackStr);
+         if (!newAttackStr.Equals(attackStr))
+         {
+            float newAttack = 0.0f;
+            if (float.TryParse(newAttackStr, out newAttack))
+            {
+               StemAttackTime = newAttack;
+               ResetAllStemTimestamps();
+            }
+         }
+         //Sustain Time
+         startPos.y += buttonVSpacing;
+         GUI.Label(new Rect(startPos.x + 10, startPos.y, groupSize.x - 50, 20), "Sustain Time: ");
+         string sustainStr = StemSustainTime.ToString();
+         string newSustainStr = GUI.TextField(new Rect(startPos.x + 10 + groupSize.x - 70, startPos.y, 50, 20), sustainStr);
+         if (!newSustainStr.Equals(sustainStr))
+         {
+            float newSustain = 0.0f;
+            if (float.TryParse(newSustainStr, out newSustain))
+            {
+               StemSustainTime = newSustain;
+               ResetAllStemTimestamps();
+            }
+         }
+         //Release
+         startPos.y += buttonVSpacing;
+         GUI.Label(new Rect(startPos.x + 10, startPos.y, groupSize.x - 50, 20), "Release Time: ");
+         string releaseStr = StemReleaseTime.ToString();
+         string newReleaseStr = GUI.TextField(new Rect(startPos.x + 10 + groupSize.x - 70, startPos.y, 50, 20), releaseStr);
+         if (!newReleaseStr.Equals(releaseStr))
+         {
+            float newRelease = 0.0f;
+            if (float.TryParse(newReleaseStr, out newRelease))
+            {
+               StemReleaseTime = newRelease;
+               ResetAllStemTimestamps();
+            }
          }
 
       // Test level sliders
@@ -231,16 +305,23 @@ public class EightNightsAudioMgr : MonoBehaviour
       // Show cur MBT in bottom left corner
          startPos.x = 10;
          startPos.y = Screen.height - 30;
-         string MBTStr = "MBT " + (BeatClock.Instance.curMeasure + 1) + ":" + (BeatClock.Instance.curBeat +1) + ":" + BeatClock.Instance.curTick;
+         string MBTStr = "Beat Time: " + (BeatClock.Instance.curMeasure + 1) + ":" + (BeatClock.Instance.curBeat +1) + ":" + BeatClock.Instance.curTick;
          GUI.Label(new Rect(startPos.x, startPos.y, 170, 25), MBTStr); 
+      // Show elapsed time
+         startPos.y -= 20;
+         int minutes = (int)(BeatClock.Instance.elapsedSecs / 60.0f);
+         int secs = (int) (BeatClock.Instance.elapsedSecs % 60.0f);
+         string secsStr = (secs < 10) ? "0" + secs : secs.ToString();
+         GUI.Label(new Rect(startPos.x, startPos.y, 170, 25), "Elapsed:    " + minutes + ":" + secsStr); 
       
       //Restart Song Button
-         startPos.x += 100;
+      //TODO: this code doesn't work yet, so disabling for now...
+       /*  startPos.x += 135;
+         startPos.y += 10;
          if(GUI.Button(new Rect(startPos.x, startPos.y, 100, 25), "Restart Song"))
          {
-            MusicPlayer.Stop();
-            MusicPlayer.Play();
-         }
+            MusicPlayer.Restart();
+         }*/
    }
 
    GroupStateData GetStateForGroup(EightNightsMgr.GroupID group)
