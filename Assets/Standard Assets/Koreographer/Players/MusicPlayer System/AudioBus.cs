@@ -129,6 +129,12 @@ public class AudioBus : MonoBehaviour
 		//TODO: determine optimal DSP Buffer Size for best latency - probably platform dependent.
 		//AudioSettings.SetDSPBufferSize(256, 4);
 	}
+
+   void OnDestroy()
+   {
+      if(busClip != null)
+         Object.DestroyImmediate(busClip);
+   }
 	
 	void Update()
 	{

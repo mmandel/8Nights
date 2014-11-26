@@ -69,6 +69,13 @@ public class MusicPlayer : MonoBehaviour, KoreographerInterface
 		}
 	}
 
+   void OnDestroy()
+   {
+      //avoid leak!
+      if (curMusic != null)
+         curMusic.ClearLayerData();
+   }
+
 	void Update()
 	{
 		//  Use the times to update the Koreographer.  Be sure to also notify it of looping/audio transitions.

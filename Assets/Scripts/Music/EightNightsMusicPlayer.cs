@@ -78,7 +78,8 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
 
    public float GetElapsedSecs()
    {
-      return (curMusic != null) ? ((float)curMusicTime / (float)curMusic.Frequency) : 0.0f;
+      //return (curMusic != null) ? ((float)curMusicTime / (float)curMusic.Frequency) : 0.0f;
+      return (curMusic != null) ? ((float) bus.GetSampleTimeOfAudio(curMusic) / (float)curMusic.Frequency) : 0.0f;
    }
 
    public float GetVolumeForGroup(EightNightsMgr.GroupID group)
@@ -184,6 +185,19 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
       }
    }
 
+   void OnDisable()
+   {
+      //avoid leak!
+      if (curMusic != null)
+      {
+         bus.Stop(false);
+         curMusic.UnregisterKoreography();
+         curMusic.ClearLayerData();
+         Debug.Log("No Leaks!");
+         System.GC.Collect();
+      }
+   }
+
    void Update()
    {
       //  Use the times to update the Koreographer.  Be sure to also notify it of looping/audio transitions.
@@ -234,6 +248,13 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
    public void Play()
    {
       PlayMusic(playbackMusic);
+   }
+
+   public void Restart()
+   {
+      Stop();
+      Play();
+      //ScheduleNextMusic(playbackMusic, curMusicTime + 10, 0, 0, false);
    }
 
    public void PlayMusic(AudioGroup group, int startSampleOffset = 0, int lengthInSamples = 0, bool bReplaceIfExists = false)

@@ -127,6 +127,9 @@ public class AudioLayer
 
 	public void ReadLayerAudioData(int sampleTimePos, float[] data, int dataOffset, int amount)
 	{
+      if (audioData == null)
+         return;
+
 		int dataPos = sampleTimePos * channelCount;
 		
 		for (int i = 0; i < amount; ++i)
@@ -137,6 +140,9 @@ public class AudioLayer
 
 	public void AddLayerAudioData(int sampleTimePos, float[] data, int dataOffset, int amount)
 	{
+      if (audioData == null)
+         return;
+
 		int dataPos = sampleTimePos * channelCount;
 
 		for (int i = 0; i < amount; ++i)

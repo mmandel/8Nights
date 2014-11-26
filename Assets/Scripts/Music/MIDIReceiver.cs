@@ -27,6 +27,7 @@ public class MIDIReceiver : MonoBehaviour
    public string MIDIResourcePath = "MIDI/Balafon";
    [Tooltip("The MIDI track # to read the data out of, starting at 0")]
    public int MIDITrackIdx = 0;
+   public float MIDITimeMult = 1.0f;
 
    public class NoteInfo
    {
@@ -58,8 +59,8 @@ public class MIDIReceiver : MonoBehaviour
             {
                NoteInfo newNote = new NoteInfo();
                newNote.NoteNumber = noteEvent.NoteNumber;
-               newNote.NoteOnBeat = ((float)noteEvent.AbsoluteTime / (float)mid.DeltaTicksPerQuarterNote);
-               newNote.DurationBeats = ((float)noteEvent.NoteLength / (float)mid.DeltaTicksPerQuarterNote);
+               newNote.NoteOnBeat = MIDITimeMult*((float)noteEvent.AbsoluteTime / (float)mid.DeltaTicksPerQuarterNote);
+               newNote.DurationBeats = MIDITimeMult*((float)noteEvent.NoteLength / (float)mid.DeltaTicksPerQuarterNote);
                _noteOns.Add(newNote);
 
                Debug.Log("  imported midi Note " + noteEvent.NoteNumber + " at beat " + newNote.NoteOnBeat + " duration " + newNote.DurationBeats);

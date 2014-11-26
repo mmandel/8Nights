@@ -136,33 +136,8 @@ public class EightNightsAudioMgr : MonoBehaviour
       Vector2 startPos = new Vector2(10, 10);
       float buttonVSpacing = 30;
 
-      // Room Triggers
-         Vector2 groupSize = new Vector2(100, buttonVSpacing*4 + 30);
-         GUI.Box(new Rect(startPos.x, startPos.y, groupSize.x, groupSize.y), "Room Triggers");
-
-         //group1
-         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + buttonVSpacing, groupSize.x - 20, 20), "Group 1"))
-         {
-            TriggerGroup(EightNightsMgr.GroupID.RoomGroup1);
-         }
-         //group2
-         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 2 * buttonVSpacing, groupSize.x - 20, 20), "Group 2"))
-         {
-            TriggerGroup(EightNightsMgr.GroupID.RoomGroup2);
-         }
-         //group3
-         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 3*buttonVSpacing, groupSize.x - 20, 20), "Group 3"))
-         {
-            TriggerGroup(EightNightsMgr.GroupID.RoomGroup3);
-         }
-         //group4
-         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 4 * buttonVSpacing, groupSize.x - 20, 20), "Group 4"))
-         {
-            TriggerGroup(EightNightsMgr.GroupID.RoomGroup4);
-         }
-
       // Rift Triggers
-         startPos.x += 130;
+         Vector2 groupSize = new Vector2(100, buttonVSpacing*4 + 30);
          GUI.Box(new Rect(startPos.x, startPos.y, groupSize.x, groupSize.y), "Rift Triggers");
 
          //group1
@@ -176,7 +151,7 @@ public class EightNightsAudioMgr : MonoBehaviour
             TriggerGroup(EightNightsMgr.GroupID.RiftGroup2);
          }
          //group3
-         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 3 * buttonVSpacing, groupSize.x - 20, 20), "Group 3"))
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 3*buttonVSpacing, groupSize.x - 20, 20), "Group 3"))
          {
             TriggerGroup(EightNightsMgr.GroupID.RiftGroup3);
          }
@@ -184,6 +159,31 @@ public class EightNightsAudioMgr : MonoBehaviour
          if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 4 * buttonVSpacing, groupSize.x - 20, 20), "Group 4"))
          {
             TriggerGroup(EightNightsMgr.GroupID.RiftGroup4);
+         }
+
+      // Room Triggers
+         startPos.x += 130;
+         GUI.Box(new Rect(startPos.x, startPos.y, groupSize.x, groupSize.y), "Room Triggers");
+
+         //group1
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + buttonVSpacing, groupSize.x - 20, 20), "Group 1"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RoomGroup1);
+         }
+         //group2
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 2 * buttonVSpacing, groupSize.x - 20, 20), "Group 2"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RoomGroup2);
+         }
+         //group3
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 3 * buttonVSpacing, groupSize.x - 20, 20), "Group 3"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RoomGroup3);
+         }
+         //group4
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 4 * buttonVSpacing, groupSize.x - 20, 20), "Group 4"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RoomGroup4);
          }
 
       //kill all button
@@ -197,7 +197,7 @@ public class EightNightsAudioMgr : MonoBehaviour
       // text fields for stem tuning params
          startPos.x = Screen.width * .5f - 150;
          startPos.y = 10;
-         groupSize = new Vector2(200, buttonVSpacing * 3 + 30);
+         groupSize = new Vector2(200, buttonVSpacing * 4 + 30);
          GUI.Box(new Rect(startPos.x, startPos.y, groupSize.x, groupSize.y), "Stem Behavior");
          //Attack Time
          startPos.y += buttonVSpacing;
@@ -240,6 +240,19 @@ public class EightNightsAudioMgr : MonoBehaviour
                StemReleaseTime = newRelease;
                ResetAllStemTimestamps();
             }
+         }
+         //tweak sync (HACK!)
+         startPos.y += buttonVSpacing;
+         String signStr = (BeatClock.Instance.LatencyMs >= 0) ? "+" : "-";
+         GUI.Label(new Rect(startPos.x + 10, startPos.y, groupSize.x - 50, 20), "Sync: " + signStr +  (BeatClock.Instance.LatencyMs / 1000));
+         if (GUI.Button(new Rect(startPos.x + 10 + groupSize.x - 85, startPos.y, 30, 20), "<"))
+         {
+            BeatClock.Instance.LatencyMs -= 1000;
+         }
+
+         if (GUI.Button(new Rect(startPos.x + 10 + groupSize.x - 45, startPos.y, 30, 20), ">"))
+         {
+            BeatClock.Instance.LatencyMs += 1000;
          }
 
       // Test level sliders

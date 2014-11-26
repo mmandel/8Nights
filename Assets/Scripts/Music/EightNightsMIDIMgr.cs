@@ -67,7 +67,7 @@ public class EightNightsMIDIMgr : MonoBehaviour
             if (c.MIDIReceiver == receiver)
             {
                c.LastNoteOnEvent = e;
-               //Debug.Log("NOTE ON " + e.MidiNote + " for Group: " + c.Group.ToString());
+               //Debug.Log("NOTE ON " + e.MidiNote + " for Group: " + c.Group.ToString() + " Beat: " + e.NoteBeat + " curBeat: " + BeatClock.Instance.elapsedBeats + " curSecs: " + BeatClock.Instance.elapsedSecs);
                if (OnNoteOn != null)
                {
                   OnNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, c.Group));
