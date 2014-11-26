@@ -4,9 +4,37 @@ using System;
 
 public class EightNightsAudioMgr : MonoBehaviour 
 {
-   public EightNightsMusicPlayer MusicPlayer;
+   public bool ShowTestUI = true;
 
+   [Space(10)]
+   public EightNightsMusicPlayer MusicPlayer;
+   [Space(10)]
    public MusicTestData MusicTester = new MusicTestData();
+
+   [Header("Tuning Values")]
+   public float StemAttackTime = 1.0f;
+   public float StemSustainTime = 10.0f;
+   public float StemReleaseTime = 3.0f;
+
+   //backing loop's state
+   public enum StemLoopState
+   {
+      Off,
+      Attacking,
+      Sustaining,
+      Releasing
+   }
+
+   public class GroupStateData
+   {
+      public EightNightsMgr.GroupID Group;
+      public StemLoopState LoopState = StemLoopState.Off;
+
+
+      public void CaptureTimestamp() { _timeStamp = Time.time; }
+      public float Timestamp() { return _timeStamp; }
+      private float _timeStamp = -1.0f;
+   }
 
    [System.Serializable]
    public class MusicTestData
@@ -40,20 +68,173 @@ public class EightNightsAudioMgr : MonoBehaviour
 
    public static EightNightsAudioMgr Instance { get; private set; }
 
+   private GroupStateData[] _groupState = null;
+
    void Awake()
    {
       Instance = this;
+
+      Array allGroups = Enum.GetValues(typeof(EightNightsMgr.GroupID));
+      _groupState = new GroupStateData[allGroups.Length];
+      int i = 0;
+      foreach (EightNightsMgr.GroupID g in Enum.GetValues(typeof(EightNightsMgr.GroupID)))
+      {
+         GroupStateData newData = new GroupStateData();
+         newData.LoopState = StemLoopState.Off;
+         newData.Group = g;
+         _groupState[i] = newData;
+         i++;
+      }
    }
 
 	void Start () 
    {
       MusicPlayer.SetBackingLoopVolume(1.0f);
-      MusicTester.EnableTestMode = false;
 	}
+
+   void OnGUI()
+   {
+      if (!ShowTestUI)
+         return;
+
+      Vector2 startPos = new Vector2(10, 10);
+      float buttonVSpacing = 30;
+
+      // Room Triggers
+         Vector2 groupSize = new Vector2(100, buttonVSpacing*4 + 30);
+         GUI.Box(new Rect(startPos.x, startPos.y, groupSize.x, groupSize.y), "Room Triggers");
+
+         //group1
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + buttonVSpacing, groupSize.x - 20, 20), "Group 1"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RoomGroup1);
+         }
+         //group2
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 2 * buttonVSpacing, groupSize.x - 20, 20), "Group 2"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RoomGroup2);
+         }
+         //group3
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 3*buttonVSpacing, groupSize.x - 20, 20), "Group 3"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RoomGroup3);
+         }
+         //group4
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 4 * buttonVSpacing, groupSize.x - 20, 20), "Group 4"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RoomGroup4);
+         }
+
+      // Rift Triggers
+         startPos.x += 130;
+         GUI.Box(new Rect(startPos.x, startPos.y, groupSize.x, groupSize.y), "Rift Triggers");
+
+         //group1
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + buttonVSpacing, groupSize.x - 20, 20), "Group 1"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RiftGroup1);
+         }
+         //group2
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 2 * buttonVSpacing, groupSize.x - 20, 20), "Group 2"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RiftGroup2);
+         }
+         //group3
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 3 * buttonVSpacing, groupSize.x - 20, 20), "Group 3"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RiftGroup3);
+         }
+         //group4
+         if (GUI.Button(new Rect(startPos.x + 10, startPos.y + 4 * buttonVSpacing, groupSize.x - 20, 20), "Group 4"))
+         {
+            TriggerGroup(EightNightsMgr.GroupID.RiftGroup4);
+         }
+
+      // Test level sliders
+         startPos.x = Screen.width - 300;
+         startPos.y = 10;
+
+         GUI.Box(new Rect(startPos.x - 30, startPos.y, 310, 350), "Stem Levels");
+
+         startPos.y += buttonVSpacing;
+
+         MusicTester.EnableTestMode = GUI.Toggle(new Rect(startPos.x, startPos.y, 200, 30), MusicTester.EnableTestMode, "Override");
+
+         startPos.y += buttonVSpacing;
+
+         Color origGUIColor = GUI.color;
+         Color curGUIColor = origGUIColor;
+         if (!MusicTester.EnableTestMode)
+            curGUIColor.a = .5f;
+         GUI.color = curGUIColor;
+
+         //backing loop
+         Rect backingRect = new Rect(startPos.x, startPos.y, 170, 25);
+         GUI.Label(backingRect, "Backing: ");
+         backingRect.x += 100;
+         float backingVol = MusicPlayer.GetBackingLoopVolume();
+         float newBackingVol = GUI.HorizontalSlider(backingRect, backingVol, 0.0f, 1.0f);
+         if (MusicTester.EnableTestMode) //only sync slider value back if in test mode
+            MusicPlayer.SetBackingLoopVolume(newBackingVol);
+
+         //loops for each group
+         foreach (EightNightsMgr.GroupID g in Enum.GetValues(typeof(EightNightsMgr.GroupID)))
+         {
+            startPos.y += buttonVSpacing;
+
+            Rect sliderRect = new Rect(startPos.x, startPos.y, 170, 25);
+            GUI.Label(sliderRect, g.ToString() + ": ");
+
+            sliderRect.x += 100;
+
+            AudioLayer l = MusicPlayer.GetLayerForGroup(g);
+            float curV = MusicPlayer.GetVolumeForGroup(g);
+            if (l != null)
+            {
+               float sliderVol = GUI.HorizontalSlider(sliderRect, curV, 0.0f, 1.0f);
+               if(MusicTester.EnableTestMode) //only sync slider value back if in test mode
+                  MusicPlayer.SetVolumeForGroup(g, sliderVol);
+            }
+         }
+
+         GUI.color = origGUIColor;
+                  
+   }
+
+   GroupStateData GetStateForGroup(EightNightsMgr.GroupID group)
+   {
+      foreach (GroupStateData d in _groupState)
+      {
+         if (d.Group == group)
+            return d;
+      }
+      return null;
+   }
+
+   public void TriggerGroup(EightNightsMgr.GroupID group)
+   {
+      GroupStateData stateData = GetStateForGroup(group);
+      if (stateData != null)
+      {
+         stateData.CaptureTimestamp(); //reset decay timers
+
+         if (stateData.LoopState == StemLoopState.Off)
+         {
+            stateData.LoopState = StemLoopState.Attacking;
+         }
+         //THIS IS TEMP UNTIL BUTTON SOUNDS ARE IN!
+         else if (stateData.LoopState == StemLoopState.Releasing)
+         {
+            stateData.LoopState = StemLoopState.Attacking;
+         }
+      }
+   }
+
 	
 	void Update () 
    {
-      if (MusicTester.EnableTestMode)
+      //test mode for overridding stem levels
+      if (MusicTester.EnableTestMode && !ShowTestUI)
       {
          MusicPlayer.SetBackingLoopVolume(MusicTester.BackingLoopVolume);
 
@@ -66,6 +247,52 @@ public class EightNightsAudioMgr : MonoBehaviour
          MusicPlayer.SetVolumeForGroup(EightNightsMgr.GroupID.RoomGroup2, MusicTester.Room2Volume);
          MusicPlayer.SetVolumeForGroup(EightNightsMgr.GroupID.RoomGroup3, MusicTester.Room3Volume);
          MusicPlayer.SetVolumeForGroup(EightNightsMgr.GroupID.RoomGroup4, MusicTester.Room4Volume);
+      }
+
+      //update state of all the audio levels
+      if (!MusicTester.EnableTestMode)
+      {
+         foreach (GroupStateData d in _groupState)
+         {
+            if (d.LoopState == StemLoopState.Off)
+            {
+               MusicPlayer.SetVolumeForGroup(d.Group, 0.0f);
+            }
+            else if (d.LoopState == StemLoopState.Attacking)
+            {
+               float u = Mathf.Clamp01( (Time.time - d.Timestamp()) / StemAttackTime );
+               MusicPlayer.SetVolumeForGroup(d.Group, u);
+
+               if (Mathf.Approximately(u, 1.0f))
+               {
+                  d.CaptureTimestamp();
+                  d.LoopState = StemLoopState.Sustaining;
+               }
+            }
+            else if (d.LoopState == StemLoopState.Sustaining)
+            {
+               MusicPlayer.SetVolumeForGroup(d.Group, 1.0f);
+
+               float u = Mathf.Clamp01((Time.time - d.Timestamp()) / StemSustainTime);
+
+               if (Mathf.Approximately(u, 1.0f))
+               {
+                  d.CaptureTimestamp();
+                  d.LoopState = StemLoopState.Releasing;
+               }
+            }
+            else if (d.LoopState == StemLoopState.Releasing)
+            {
+               float u = Mathf.Clamp01((Time.time - d.Timestamp()) / StemReleaseTime);
+               MusicPlayer.SetVolumeForGroup(d.Group, 1.0f - u);
+
+               if (Mathf.Approximately(u, 1.0f))
+               {
+                  d.CaptureTimestamp();
+                  d.LoopState = StemLoopState.Off;
+               }
+            }
+         }
       }
 	}
 }

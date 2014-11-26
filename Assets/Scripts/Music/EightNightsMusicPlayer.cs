@@ -72,24 +72,51 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
 
    AudioSource audioCom;
 
+   public float GetVolumeForGroup(EightNightsMgr.GroupID group)
+   {
+      AudioLayer layer = GetLayerForGroup(group);
+      EightNightsLayerDetails layerDetails = GetLayerDetailsForGroup(group);
+      if ((layer != null) && (layerDetails != null))
+      {
+         return Mathf.InverseLerp(0.0f, layerDetails.MixVolume, layer.Volume);
+      }
+      return 0.0f;
+   }
+
    public void SetVolumeForGroup(EightNightsMgr.GroupID group, float volume)
    {
       //look up which layer
-      EightNightsLayerDetails layerDetails = null;
-      foreach (EightNightsLayerDetails d in EightNightsDetails)
-      {
-         if (d.Group == group)
-         {
-            layerDetails = d;
-            break;
-         }
-      }
+      EightNightsLayerDetails layerDetails = GetLayerDetailsForGroup(group);
 
       if (layerDetails != null)
       {
          AudioLayer layer = playbackMusic.GetLayer(layerDetails.LayerIdx);
          layer.Volume = Mathf.Lerp(0.0f, layerDetails.MixVolume, volume);
       }
+   }
+
+   public AudioLayer GetLayerForGroup(EightNightsMgr.GroupID group)
+   {
+      //look up which layer
+      foreach (EightNightsLayerDetails d in EightNightsDetails)
+      {
+         if (d.Group == group)
+            return playbackMusic.GetLayer(d.LayerIdx);
+      }
+
+      return null;
+   }
+
+   public EightNightsLayerDetails GetLayerDetailsForGroup(EightNightsMgr.GroupID group)
+   {
+      //look up which layer
+      foreach (EightNightsLayerDetails d in EightNightsDetails)
+      {
+         if (d.Group == group)
+            return d;
+      }
+
+      return null;
    }
 
    public void SetBackingLoopVolume(float volume)
@@ -99,6 +126,16 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
       {
          layer.Volume = Mathf.Lerp(0.0f, BackingLoopMixVolume, volume);
       }
+   }
+
+   public float GetBackingLoopVolume()
+   {
+      AudioLayer layer = playbackMusic.GetLayer(BackingLoopLayerIdx);
+      if (layer != null)
+      {
+         return  Mathf.InverseLerp(0.0f, BackingLoopMixVolume, layer.Volume);
+      }
+      return 0.0f;
    }
 
    void Awake()
