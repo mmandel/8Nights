@@ -17,6 +17,12 @@ public class EightNightsAudioMgr : MonoBehaviour
    public float StemSustainTime = 10.0f;
    public float StemReleaseTime = 3.0f;
 
+
+   public static EightNightsAudioMgr Instance { get; private set; }
+
+   private GroupStateData[] _groupState = null;
+   private GroupStateData _peakGroupState = null;
+
    //backing loop's state
    public enum StemLoopState
    {
@@ -33,6 +39,7 @@ public class EightNightsAudioMgr : MonoBehaviour
 
 
       public void CaptureTimestamp() { _timeStamp = Time.time; }
+      public void SetTimestamp(float t) { _timeStamp = t; }
       public float Timestamp() { return _timeStamp; }
       private float _timeStamp = -1.0f;
    }
@@ -67,13 +74,12 @@ public class EightNightsAudioMgr : MonoBehaviour
       public float Room4Volume = 0.0f;
    }
 
-   public static EightNightsAudioMgr Instance { get; private set; }
-
-   private GroupStateData[] _groupState = null;
-
    void Awake()
    {
       Instance = this;
+
+      _peakGroupState = new GroupStateData();
+      _peakGroupState.LoopState = StemLoopState.Off;
 
       Array allGroups = Enum.GetValues(typeof(EightNightsMgr.GroupID));
       _groupState = new GroupStateData[allGroups.Length];
@@ -91,11 +97,17 @@ public class EightNightsAudioMgr : MonoBehaviour
 	void Start () 
    {
       MusicPlayer.SetBackingLoopVolume(1.0f);
+      MusicPlayer.SetPeakLoopVolume(0.0f);
 	}
 
    public float GetElapsedSecs()
    {
       return MusicPlayer.GetElapsedSecs();
+   }
+
+   public bool IsPeakMode()
+   {
+      return _peakGroupState.LoopState != StemLoopState.Off;
    }
 
    void OnGUI()
@@ -183,6 +195,17 @@ public class EightNightsAudioMgr : MonoBehaviour
          if (MusicTester.EnableTestMode) //only sync slider value back if in test mode
             MusicPlayer.SetBackingLoopVolume(newBackingVol);
 
+         startPos.y += buttonVSpacing;
+
+         //peak loop
+         Rect peakRect = new Rect(startPos.x, startPos.y, 170, 25);
+         GUI.Label(peakRect, "Peak State: ");
+         peakRect.x += 100;
+         float peakVol = MusicPlayer.GetPeakLoopVolume();
+         float newPeakVol = GUI.HorizontalSlider(peakRect, peakVol, 0.0f, 1.0f);
+         if (MusicTester.EnableTestMode) //only sync slider value back if in test mode
+            MusicPlayer.SetPeakLoopVolume(newPeakVol);
+
          //loops for each group
          foreach (EightNightsMgr.GroupID g in Enum.GetValues(typeof(EightNightsMgr.GroupID)))
          {
@@ -252,6 +275,31 @@ public class EightNightsAudioMgr : MonoBehaviour
             stateData.LoopState = StemLoopState.Attacking;
          }*/
       }
+
+      //keep peak alive, add a couple seconds to peak mode
+      if (_peakGroupState.LoopState == StemLoopState.Sustaining)
+      {
+         float secsToAdd = 2.0f;
+         float elapsedTime = Time.time - _peakGroupState.Timestamp();
+         float timeLeft = Mathf.Clamp(StemSustainTime - elapsedTime, 0.0f, StemSustainTime);
+         if (timeLeft + secsToAdd > StemSustainTime)
+            secsToAdd = StemSustainTime - timeLeft;
+         _peakGroupState.SetTimestamp(_peakGroupState.Timestamp() + secsToAdd);
+      }
+   }
+
+   bool AllGroupStemsSustaining()
+   {
+      bool nowInPeak = true;
+      foreach (GroupStateData d in _groupState)
+      {
+         if (d.LoopState != StemLoopState.Sustaining)
+         {
+            nowInPeak = false;
+            break;
+         }
+      }
+      return nowInPeak;
    }
 
 	
@@ -276,6 +324,68 @@ public class EightNightsAudioMgr : MonoBehaviour
       //update state of all the audio levels
       if (!MusicTester.EnableTestMode)
       {
+         bool wasPeakMode = IsPeakMode();
+         if (!wasPeakMode) //should we enter peak state?
+         {
+            //see if all the stems are on
+            bool nowInPeak = AllGroupStemsSustaining();
+
+            if (nowInPeak)
+            {
+               //reset timers so stems stay alive!
+               foreach (GroupStateData d in _groupState)
+               {
+                  d.CaptureTimestamp();
+               }
+
+               _peakGroupState.LoopState = StemLoopState.Attacking;
+               _peakGroupState.CaptureTimestamp();
+            }
+            else
+            {
+               _peakGroupState.LoopState = StemLoopState.Off;
+            }
+
+            MusicPlayer.SetPeakLoopVolume(0.0f);
+         }
+         else //in peak state!
+         {
+            if (_peakGroupState.LoopState == StemLoopState.Attacking)
+            {
+               float u = Mathf.Clamp01((Time.time - _peakGroupState.Timestamp()) / StemAttackTime);
+               MusicPlayer.SetPeakLoopVolume(u);
+
+               if (Mathf.Approximately(u, 1.0f))
+               {
+                  _peakGroupState.CaptureTimestamp();
+                  _peakGroupState.LoopState = StemLoopState.Sustaining;
+               }
+            }
+            else if (_peakGroupState.LoopState == StemLoopState.Sustaining)
+            {
+               MusicPlayer.SetPeakLoopVolume(1.0f);
+
+               float u = Mathf.Clamp01((Time.time - _peakGroupState.Timestamp()) / StemSustainTime);
+
+               if (Mathf.Approximately(u, 1.0f))
+               {
+                  _peakGroupState.CaptureTimestamp();
+                  _peakGroupState.LoopState = StemLoopState.Releasing;
+               }
+            }
+            else if (_peakGroupState.LoopState == StemLoopState.Releasing)
+            {
+               float u = Mathf.Clamp01((Time.time - _peakGroupState.Timestamp()) / StemReleaseTime);
+               MusicPlayer.SetPeakLoopVolume(1.0f-u);
+
+               if (Mathf.Approximately(u, 1.0f))
+               {
+                  _peakGroupState.CaptureTimestamp();
+                  _peakGroupState.LoopState = StemLoopState.Off;
+               }
+            }
+         }
+
          foreach (GroupStateData d in _groupState)
          {
             if (d.LoopState == StemLoopState.Off)

@@ -40,6 +40,10 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
    [Range(0.0f, 1.0f)]
    public float BackingLoopMixVolume = 1.0f;
 
+   public int PeakLoopLayerIdx = 9;
+   [Range(0.0f, 1.0f)]
+   public float PeakLoopMixVolume = 1.0f;
+
    [SerializeField]
    int musicChannels = 2;
 
@@ -74,7 +78,7 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
 
    public float GetElapsedSecs()
    {
-      return ((float)curMusicTime / (float)curMusic.Frequency);
+      return (curMusic != null) ? ((float)curMusicTime / (float)curMusic.Frequency) : 0.0f;
    }
 
    public float GetVolumeForGroup(EightNightsMgr.GroupID group)
@@ -139,6 +143,25 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
       if (layer != null)
       {
          return  Mathf.InverseLerp(0.0f, BackingLoopMixVolume, layer.Volume);
+      }
+      return 0.0f;
+   }
+
+   public void SetPeakLoopVolume(float volume)
+   {
+      AudioLayer layer = playbackMusic.GetLayer(PeakLoopLayerIdx);
+      if (layer != null)
+      {
+         layer.Volume = Mathf.Lerp(0.0f, PeakLoopMixVolume, volume);
+      }
+   }
+
+   public float GetPeakLoopVolume()
+   {
+      AudioLayer layer = playbackMusic.GetLayer(PeakLoopLayerIdx);
+      if (layer != null)
+      {
+         return Mathf.InverseLerp(0.0f, PeakLoopMixVolume, layer.Volume);
       }
       return 0.0f;
    }
