@@ -208,6 +208,11 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
    #endregion
    #region Playback Control
 
+   public void Play()
+   {
+      PlayMusic(playbackMusic);
+   }
+
    public void PlayMusic(AudioGroup group, int startSampleOffset = 0, int lengthInSamples = 0, bool bReplaceIfExists = false)
    {
       // TODO: Warn if channels/frequency not matching!

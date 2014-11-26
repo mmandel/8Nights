@@ -208,8 +208,16 @@ public class EightNightsAudioMgr : MonoBehaviour
       // Show cur MBT in bottom left corner
          startPos.x = 10;
          startPos.y = Screen.height - 30;
-         string MBTStr = (BeatClock.Instance.curMeasure + 1) + ":" + (BeatClock.Instance.curBeat +1) + ":" + BeatClock.Instance.curTick;
-         GUI.Label(new Rect(startPos.x, startPos.y, 170, 25), MBTStr);       
+         string MBTStr = "MBT " + (BeatClock.Instance.curMeasure + 1) + ":" + (BeatClock.Instance.curBeat +1) + ":" + BeatClock.Instance.curTick;
+         GUI.Label(new Rect(startPos.x, startPos.y, 170, 25), MBTStr); 
+      
+      //Restart Song Button
+         startPos.x += 100;
+         if(GUI.Button(new Rect(startPos.x, startPos.y, 100, 25), "Restart Song"))
+         {
+            MusicPlayer.Stop();
+            MusicPlayer.Play();
+         }
    }
 
    GroupStateData GetStateForGroup(EightNightsMgr.GroupID group)
