@@ -72,6 +72,11 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
 
    AudioSource audioCom;
 
+   public float GetElapsedSecs()
+   {
+      return ((float)curMusicTime / (float)curMusic.Frequency);
+   }
+
    public float GetVolumeForGroup(EightNightsMgr.GroupID group)
    {
       AudioLayer layer = GetLayerForGroup(group);

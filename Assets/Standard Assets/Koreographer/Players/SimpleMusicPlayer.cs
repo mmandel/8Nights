@@ -37,7 +37,7 @@ public class SimpleMusicPlayer : MonoBehaviour, KoreographerInterface
 
 		if (koreography != null)
 		{
-			LoadSong(koreography);
+			LoadSong(koreography, 0, audio.playOnAwake);
 		}
 	}
 

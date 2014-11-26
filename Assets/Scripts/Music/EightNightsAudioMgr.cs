@@ -8,6 +8,7 @@ public class EightNightsAudioMgr : MonoBehaviour
 
    [Space(10)]
    public EightNightsMusicPlayer MusicPlayer;
+   public ButtonSoundMgr ButtonSoundManager;
    [Space(10)]
    public MusicTestData MusicTester = new MusicTestData();
 
@@ -91,6 +92,11 @@ public class EightNightsAudioMgr : MonoBehaviour
    {
       MusicPlayer.SetBackingLoopVolume(1.0f);
 	}
+
+   public float GetElapsedSecs()
+   {
+      return MusicPlayer.GetElapsedSecs();
+   }
 
    void OnGUI()
    {
@@ -198,7 +204,12 @@ public class EightNightsAudioMgr : MonoBehaviour
          }
 
          GUI.color = origGUIColor;
-                  
+
+      // Show cur MBT in bottom left corner
+         startPos.x = 10;
+         startPos.y = Screen.height - 30;
+         string MBTStr = (BeatClock.Instance.curMeasure + 1) + ":" + (BeatClock.Instance.curBeat +1) + ":" + BeatClock.Instance.curTick;
+         GUI.Label(new Rect(startPos.x, startPos.y, 170, 25), MBTStr);       
    }
 
    GroupStateData GetStateForGroup(EightNightsMgr.GroupID group)
@@ -213,12 +224,17 @@ public class EightNightsAudioMgr : MonoBehaviour
 
    public void TriggerGroup(EightNightsMgr.GroupID group)
    {
+      //TODO: temp behavior
+      //we should eventually trigger button sound and wait for downbeat to start fading in track...
+      if (ButtonSoundManager != null)
+         ButtonSoundManager.TriggerSoundForGroup(group);
+
       GroupStateData stateData = GetStateForGroup(group);
       if (stateData != null)
       {
          stateData.CaptureTimestamp(); //reset decay timers
-
-         if (stateData.LoopState == StemLoopState.Off)
+         stateData.LoopState = StemLoopState.Attacking;
+         /*if (stateData.LoopState == StemLoopState.Off)
          {
             stateData.LoopState = StemLoopState.Attacking;
          }
@@ -226,7 +242,7 @@ public class EightNightsAudioMgr : MonoBehaviour
          else if (stateData.LoopState == StemLoopState.Releasing)
          {
             stateData.LoopState = StemLoopState.Attacking;
-         }
+         }*/
       }
    }
 
