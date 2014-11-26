@@ -85,28 +85,36 @@ public class EightNightsMIDIMgr : MonoBehaviour
       float HSpacing = 30;
       Vector2 badgeSize = new Vector2(120, 120);
 
-      Vector2 startPos = new Vector2((.5f * Screen.width) - (MIDIConfigs.Length*badgeSize.x*.5f), .5f * Screen.height);
+      Vector2 startPos = new Vector2((.5f * Screen.width) - (MIDIConfigs.Length*badgeSize.x*.5f) - 50, .5f * Screen.height);
 
       foreach (MIDIConfig c in MIDIConfigs)
       {
          Color origGUIColor = GUI.color;
+         float badgeAlpha = 1.0f;
          if(c.LastNoteOnEvent != null)
          {
-            Color curGUIColor = origGUIColor;
             float noteProgressU = Mathf.InverseLerp(c.LastNoteOnEvent.NoteBeat, c.LastNoteOnEvent.NoteBeat + 1.0f, BeatClock.Instance.elapsedBeats);
-            curGUIColor.a= Mathf.Lerp(.6f, 1.0f, 1.0f - noteProgressU);
-            GUI.color = curGUIColor;
+            badgeAlpha = Mathf.Lerp(.6f, 1.0f, 1.0f - noteProgressU);
          }
+         float volumeMult = EightNightsAudioMgr.Instance.MusicPlayer.GetVolumeForGroup(c.Group);
+         Color curGUIColor = origGUIColor;
+         curGUIColor.a = volumeMult*badgeAlpha;
+         GUI.color = curGUIColor;
 
          Rect badgeRect = new Rect(startPos.x, startPos.y, badgeSize.x, badgeSize.y);
          GUI.Box(badgeRect,"");
 
          GUI.color = origGUIColor;
 
+         curGUIColor.a = volumeMult;
+         GUI.color = curGUIColor;
+
          Rect titleRect = badgeRect;
          titleRect.x += 15;
          GUI.Label(titleRect, c.Group.ToString() + " MIDI");
          GUI.Label(new Rect(badgeRect.center.x - 10, badgeRect.center.y - 10, 30, 30), (c.LastNoteOnEvent != null) ? c.LastNoteOnEvent.MidiNote.ToString() : "");
+
+         GUI.color = origGUIColor;
 
          startPos.x += HSpacing;
 
