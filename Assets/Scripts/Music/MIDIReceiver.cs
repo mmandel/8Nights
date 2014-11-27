@@ -16,10 +16,11 @@ public class MIDIReceiver : MonoBehaviour
    public event MIDIHandler OnNoteOn; 
    public class MIDIReceiverEventArgs : EventArgs
    {
-      public MIDIReceiverEventArgs(int midiNote, float beat, float durationBeats) { MidiNote = midiNote; NoteBeat = beat; DurationBeats = durationBeats; }
+      public MIDIReceiverEventArgs(MIDIReceiver r, int midiNote, float beat, float durationBeats) { Receiver = r; MidiNote = midiNote; NoteBeat = beat; DurationBeats = durationBeats; }
       public int MidiNote;
       public float NoteBeat = 0.0f;
       public float DurationBeats = 0.0f;
+      public MIDIReceiver Receiver = null;
    }
    public delegate void MIDIHandler(object sender, MIDIReceiverEventArgs e);
 
@@ -36,8 +37,66 @@ public class MIDIReceiver : MonoBehaviour
       public float DurationBeats;
    }
 
+   class PrerollSubscriber
+   {
+      public PrerollSubscriber(Action<MIDIReceiverEventArgs> callback, float prerollSecs)
+      {
+         _callback = callback;
+         _prerollSecs = prerollSecs;
+      }
+
+      public System.Object CallbackTarget() { return _callback.Target; }
+      public float Preroll() { return _prerollSecs; }
+      public void SetPreroll(float s) { _prerollSecs = s; }
+
+      public void DoCallback(MIDIReceiverEventArgs e) { _callback.Invoke(e); }
+
+      Action<MIDIReceiverEventArgs> _callback = null;
+      float _prerollSecs = 0.0f;
+   }
+
    private List<NoteInfo> _noteOns = null;
+   private List<PrerollSubscriber> _preRollSubscribers = new List<PrerollSubscriber>();
    private float _prevBeat = 0.0f;
+
+   public void AddOrUpdatePrerollSubscriber(Action<MIDIReceiverEventArgs> callback, float preroll)
+   {
+      //find existing subscriber
+      PrerollSubscriber sub = null;
+      foreach (PrerollSubscriber s in _preRollSubscribers)
+      {
+         if (s.CallbackTarget() == callback.Target)
+         {
+            sub = s;
+            //update preroll!
+            sub.SetPreroll(preroll);
+            break;
+         }
+      }
+
+      //no existing entry?  create one!
+      if (sub == null)
+      {
+         sub = new PrerollSubscriber(callback, preroll);
+         _preRollSubscribers.Add(sub);
+      }
+   }
+
+   public void RemovePrerollSubscriber(Action<MIDIReceiverEventArgs> callback)
+   {
+      PrerollSubscriber sub = null;
+      foreach (PrerollSubscriber s in _preRollSubscribers)
+      {
+         if (s.CallbackTarget() == callback.Target)
+         {
+            sub = s;
+            break;
+         }
+      }
+
+      if (sub != null)
+         _preRollSubscribers.Remove(sub);
+   }
 
    public void ReImport()
    {
@@ -87,7 +146,17 @@ public class MIDIReceiver : MonoBehaviour
          {
             //Debug.Log("NOTE ON: " + info.NoteNumber);
             if (OnNoteOn != null)
-               OnNoteOn(this, new MIDIReceiverEventArgs(info.NoteNumber, info.NoteOnBeat, info.DurationBeats));
+               OnNoteOn(this, new MIDIReceiverEventArgs(this, info.NoteNumber, info.NoteOnBeat, info.DurationBeats));
+         }
+
+         //do preroll subscribers
+         foreach (PrerollSubscriber s in _preRollSubscribers)
+         {
+            float prerolledBeat = info.NoteOnBeat - s.Preroll();
+            if ((prerolledBeat > _prevBeat) && (prerolledBeat <= curBeat))
+            {
+               s.DoCallback(new MIDIReceiverEventArgs(this, info.NoteNumber, info.NoteOnBeat, info.DurationBeats));
+            }
          }
       }
 

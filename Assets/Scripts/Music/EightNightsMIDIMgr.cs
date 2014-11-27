@@ -12,6 +12,9 @@ public class EightNightsMIDIMgr : MonoBehaviour
 
    //events
    public event EightNightsMIDIHandler OnNoteOn;
+   public event EightNightsMIDIHandler OnHueNoteOn; //pre-rolled for hue latency
+   public event EightNightsMIDIHandler OnLightJamsNoteOn; //pre-rolled for light jams latency
+
    public class EightNightsMIDIEventArgs : EventArgs
    {
       public EightNightsMIDIEventArgs(int midiNote, float beat, float durationBeats, EightNightsMgr.GroupID g) { Group = g; MidiNote = midiNote; NoteBeat = beat; DurationBeats = durationBeats; }
@@ -54,27 +57,78 @@ public class EightNightsMIDIMgr : MonoBehaviour
       foreach (MIDIConfig c in MIDIConfigs)
       {
          c.MIDIReceiver.OnNoteOn += OnMIDIReceiverNoteOn;
+
+         //register for pre-rolled events for Hue and LightJams lights
+         if (HueMessenger.Instance != null)
+            c.MIDIReceiver.AddOrUpdatePrerollSubscriber(OnMIDIReceiverHueNoteOn, HueMessenger.Instance.GetCurLatency());
+         if(LightJamsMgr.Instance != null)
+            c.MIDIReceiver.AddOrUpdatePrerollSubscriber(OnMIDIReceiverLightJamsNoteOn, LightJamsMgr.Instance.GetCurLatency());
+      }
+   }
+
+   void Update()
+   {
+      //keep pre-roll latencies up to date in case they are changing
+      foreach (MIDIConfig c in MIDIConfigs)
+      {
+         if (HueMessenger.Instance != null)
+            c.MIDIReceiver.AddOrUpdatePrerollSubscriber(OnMIDIReceiverHueNoteOn, HueMessenger.Instance.GetCurLatency());
+         if (LightJamsMgr.Instance != null)
+            c.MIDIReceiver.AddOrUpdatePrerollSubscriber(OnMIDIReceiverLightJamsNoteOn, LightJamsMgr.Instance.GetCurLatency());
       }
    }
 
    void OnMIDIReceiverNoteOn(object sender, MIDIReceiver.MIDIReceiverEventArgs e)
    {
-      MIDIReceiver receiver = sender as MIDIReceiver;
+      MIDIConfig c = FindConfigForReceiver(e.Receiver);
+      if (c != null)
+      {
+         c.LastNoteOnEvent = e;
+         //Debug.Log("NOTE ON " + e.MidiNote + " for Group: " + c.Group.ToString() + " Beat: " + e.NoteBeat + " curBeat: " + BeatClock.Instance.elapsedBeats + " curSecs: " + BeatClock.Instance.elapsedSecs);
+         if (OnNoteOn != null)
+         {
+            OnNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, c.Group));
+         }
+      }
+   }
+
+   void OnMIDIReceiverHueNoteOn(MIDIReceiver.MIDIReceiverEventArgs e)
+   {
+      MIDIConfig c = FindConfigForReceiver(e.Receiver);
+      if (c != null)
+      {
+         //Debug.Log("HUE NOTE ON " + e.MidiNote + " for Group: " + c.Group.ToString() + " Beat: " + e.NoteBeat + " curBeat: " + BeatClock.Instance.elapsedBeats + " curSecs: " + BeatClock.Instance.elapsedSecs);
+         if (OnHueNoteOn != null)
+         {
+            OnHueNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, c.Group));
+         }
+      }
+   }
+
+   void OnMIDIReceiverLightJamsNoteOn(MIDIReceiver.MIDIReceiverEventArgs e)
+   {
+      MIDIConfig c = FindConfigForReceiver(e.Receiver);
+      if (c != null)
+      {
+         //Debug.Log("LightJams NOTE ON " + e.MidiNote + " for Group: " + c.Group.ToString() + " Beat: " + e.NoteBeat + " curBeat: " + BeatClock.Instance.elapsedBeats + " curSecs: " + BeatClock.Instance.elapsedSecs);
+         if (OnLightJamsNoteOn != null)
+         {
+            OnLightJamsNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, c.Group));
+         }
+      }
+   }
+
+   MIDIConfig FindConfigForReceiver(MIDIReceiver receiver)
+   {
       if (receiver != null)
       {
          foreach (MIDIConfig c in MIDIConfigs)
          {
             if (c.MIDIReceiver == receiver)
-            {
-               c.LastNoteOnEvent = e;
-               //Debug.Log("NOTE ON " + e.MidiNote + " for Group: " + c.Group.ToString() + " Beat: " + e.NoteBeat + " curBeat: " + BeatClock.Instance.elapsedBeats + " curSecs: " + BeatClock.Instance.elapsedSecs);
-               if (OnNoteOn != null)
-               {
-                  OnNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, c.Group));
-               }
-            }
+               return c;
          }
       }
+      return null;
    }
 
    void OnGUI()

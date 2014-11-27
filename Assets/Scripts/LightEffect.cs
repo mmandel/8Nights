@@ -1,11 +1,12 @@
 ﻿//
-// Creates an animated sequence of changes to a set of hue lights, driving it optimally for responsiveness
+// A way to keyframe a simple effect that targets a particular light in the installation 
 //
 
 using UnityEngine;
 using System.Collections;
 
-public class HueEffect : MonoBehaviour {
+public class LightEffect : MonoBehaviour
+{
 
    [System.Serializable]
    public class EffectKeyframe
@@ -20,7 +21,11 @@ public class HueEffect : MonoBehaviour {
    [System.Serializable]
    public class LightState
    {
-      public int LightIdx = 0;
+      //public int LightIdx = 0;
+
+      public EightNightsMgr.GroupID Group;
+      public EightNightsMgr.LightID Light;
+      
       public bool on = true;
       public Color color = Color.red;
       public float fade = 1.0f;
@@ -47,10 +52,11 @@ public class HueEffect : MonoBehaviour {
       kBlending
    };
 
-	// Use this for initialization
-	void Start () {
-	
-	}
+   // Use this for initialization
+   void Start()
+   {
+
+   }
 
    void OnEnable()
    {
@@ -62,10 +68,11 @@ public class HueEffect : MonoBehaviour {
    {
       _curState = KeyState.kStart;
    }
-	
-	// Update is called once per frame
-	void Update () {
-      
+
+   // Update is called once per frame
+   void Update()
+   {
+
       if ((Keyframes.Length == 0) || (HueMessenger.Instance == null))
          return;
 
@@ -76,9 +83,9 @@ public class HueEffect : MonoBehaviour {
       {
          case KeyState.kStart:
             _timeStamp = -1;
-            _curKey = -1;            
-            ApplyKey(0);            
-         break;
+            _curKey = -1;
+            ApplyKey(0);
+            break;
          case KeyState.kBlending:
             key = Keyframes[_curKey];
             if (elapsed >= _curTransitionTime)
@@ -96,30 +103,30 @@ public class HueEffect : MonoBehaviour {
                   _curState = KeyState.kHolding;
                }
             }
-         break;
+            break;
          case KeyState.kHolding:
             key = Keyframes[_curKey];
-            if (elapsed >= SpeedScale*key.HoldTime)
+            if (elapsed >= SpeedScale * key.HoldTime)
             {
                if ((_curKey == (Keyframes.Length - 1)) && !Loop) //last key, we're done!
                   _curState = KeyState.kDone;
                else
                   ApplyKey((_curKey + 1) % Keyframes.Length);
             }
-         break;
+            break;
          case KeyState.kDone:
             if (Loop)
                _curState = KeyState.kStart;
-         break;
+            break;
       }
-	}
+   }
 
    void ApplyKey(int idx)
    {
       EffectKeyframe prevKey = (_curKey >= 0) ? Keyframes[_curKey] : null;
       EffectKeyframe key = Keyframes[idx];
 
-      float transitionTime = (prevKey != null) ? SpeedScale*prevKey.BlendTime : 0.0f;
+      float transitionTime = (prevKey != null) ? SpeedScale * prevKey.BlendTime : 0.0f;
 
       //looping around, pop to first frame if configured for that
       if ((prevKey != null) && (idx == 0) && !BlendWhenLooping)
@@ -128,7 +135,7 @@ public class HueEffect : MonoBehaviour {
       for (int i = 0; i < key.LightKeys.Length; i++)
       {
          LightState curState = key.LightKeys[i];
-         HueMessenger.Instance.SetState(curState.LightIdx, curState.on, curState.fade, curState.color, transitionTime);
+         EightNightsMgr.Instance.SetLight(curState.Group, curState.Light, curState.fade, curState.color, transitionTime);
       }
 
       if (Mathf.Approximately(key.BlendTime, 0.0f))
