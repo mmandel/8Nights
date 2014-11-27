@@ -402,6 +402,9 @@ public class EightNightsMgr : MonoBehaviour
 
 	void Update () 
    {
+      if (Input.GetKeyDown(KeyCode.Escape))
+         Application.Quit();
+
       //update light configs to handle things like transitioning
       for (int i = 0; i < LightGroups.Length; i++)
       {

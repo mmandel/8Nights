@@ -34,6 +34,8 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
    [SerializeField]
    AudioGroup playbackMusic = null;
 
+   public bool AutoLoop = true;
+
    public EightNightsLayerDetails[] EightNightsDetails;
 
    public int BackingLoopLayerIdx = 0;
@@ -252,9 +254,14 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
 
    public void Restart()
    {
-      Stop();
-      Play();
-      //ScheduleNextMusic(playbackMusic, curMusicTime + 10, 0, 0, false);
+      //Stop();
+      //Play();
+
+      //if(curMusic != null)
+      //   curMusic.ClearLayerData();
+      AudioGroup groupToTrigger = (curMusic != null) ? curMusic : playbackMusic;
+      curMusic = null; //hack to ensure it actually plays now!
+      ScheduleNextMusic(groupToTrigger);
    }
 
    public void PlayMusic(AudioGroup group, int startSampleOffset = 0, int lengthInSamples = 0, bool bReplaceIfExists = false)
@@ -366,6 +373,14 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
    {
       if (curMusic == group)
       {
+         Debug.Log("Audio ended!");
+         if (AutoLoop)
+         {
+            transMusic = curMusic;
+            transMusicTime = 0;
+            Debug.Log("Looping Music!");
+         }
+
          if (sampleTime != curMusicTime)
          {
             PerformChoreographyForTimeSlice(curMusic, curMusicTime + 1, sampleTime);
@@ -394,6 +409,13 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
          if (MusicEnded != null)
          {
             MusicEnded(group);
+         }
+
+         if (AutoLoop)
+         {
+            AudioGroup groupToTrigger = curMusic;
+            curMusic = null; //hack to ensure it actually plays now!
+            ScheduleNextMusic(groupToTrigger);
          }
       }
       else

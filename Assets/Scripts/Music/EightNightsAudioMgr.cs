@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 
 public class EightNightsAudioMgr : MonoBehaviour 
@@ -16,12 +17,16 @@ public class EightNightsAudioMgr : MonoBehaviour
    public float StemAttackTime = 1.0f;
    public float StemSustainTime = 10.0f;
    public float StemReleaseTime = 3.0f;
+   public bool  EnableSoloDucking = true;
+   public float SoloTime = 5.0f;
 
 
    public static EightNightsAudioMgr Instance { get; private set; }
 
    private GroupStateData[] _groupState = null;
    private GroupStateData _peakGroupState = null;
+   private SoloGroup _riftSoloing = null;
+   private SoloGroup _roomSoloing = null;
 
    //backing loop's state
    public enum StemLoopState
@@ -36,12 +41,63 @@ public class EightNightsAudioMgr : MonoBehaviour
    {
       public EightNightsMgr.GroupID Group;
       public StemLoopState LoopState = StemLoopState.Off;
+      public bool UseTriggerCheat = false;
+      public KeyCode TriggerCheat = KeyCode.Alpha1;
+      public float MasterFader = 1.0f;
 
 
       public void CaptureTimestamp() { _timeStamp = Time.time; }
       public void SetTimestamp(float t) { _timeStamp = t; }
       public float Timestamp() { return _timeStamp; }
       private float _timeStamp = -1.0f;
+   }
+
+   public class SoloGroup
+   {
+      public List<EightNightsMgr.GroupID> GroupsInGroup = new List<EightNightsMgr.GroupID>();
+
+      public void MakeSoloist(EightNightsMgr.GroupID newSoloist)
+      {
+         foreach(EightNightsMgr.GroupID g in GroupsInGroup)
+         {
+            if (g == newSoloist)
+            {
+               _lastSoloist = g;
+               _lastSoloistStart = Time.time;
+               break;
+            }
+         }
+      }
+
+      public void Update()
+      {
+         float soloTime = EightNightsAudioMgr.Instance.SoloTime;
+         bool soloingActive = (_lastSoloistStart > 0.0f) && ((Time.time - _lastSoloistStart) <= soloTime) && EightNightsAudioMgr.Instance.EnableSoloDucking;
+
+         float duckSpeed = .50f;
+         float soloSpeed = .50f;
+
+         foreach (EightNightsMgr.GroupID g in GroupsInGroup)
+         {
+            GroupStateData sd = EightNightsAudioMgr.Instance.GetStateForGroup(g);
+            if (sd == null)
+               continue;
+
+            if ((g == _lastSoloist) || !soloingActive) //drive master fader towards 1
+            {
+               sd.MasterFader += soloSpeed * Time.deltaTime;
+               sd.MasterFader = Mathf.Clamp01(sd.MasterFader);
+            }
+            else //drive master fader towards .5
+            {
+               sd.MasterFader -= duckSpeed * Time.deltaTime;
+               sd.MasterFader = Mathf.Clamp(sd.MasterFader, .5f, 1.0f);
+            }
+         }
+      }
+
+      private EightNightsMgr.GroupID _lastSoloist;
+      private float _lastSoloistStart = -1.0f;
    }
 
    [System.Serializable]
@@ -89,9 +145,32 @@ public class EightNightsAudioMgr : MonoBehaviour
          GroupStateData newData = new GroupStateData();
          newData.LoopState = StemLoopState.Off;
          newData.Group = g;
+         newData.UseTriggerCheat = true;
          _groupState[i] = newData;
          i++;
       }
+
+      //setup cheats
+      GetStateForGroup(EightNightsMgr.GroupID.RiftGroup1).TriggerCheat = KeyCode.Alpha1;
+      GetStateForGroup(EightNightsMgr.GroupID.RiftGroup2).TriggerCheat = KeyCode.Alpha2;
+      GetStateForGroup(EightNightsMgr.GroupID.RiftGroup3).TriggerCheat = KeyCode.Alpha3;
+      GetStateForGroup(EightNightsMgr.GroupID.RiftGroup4).TriggerCheat = KeyCode.Alpha4;
+      GetStateForGroup(EightNightsMgr.GroupID.RoomGroup1).TriggerCheat = KeyCode.Q;
+      GetStateForGroup(EightNightsMgr.GroupID.RoomGroup2).TriggerCheat = KeyCode.W;
+      GetStateForGroup(EightNightsMgr.GroupID.RoomGroup3).TriggerCheat = KeyCode.E;
+      GetStateForGroup(EightNightsMgr.GroupID.RoomGroup4).TriggerCheat = KeyCode.R;
+
+      //setup soloing groups
+      _riftSoloing = new SoloGroup();
+      _riftSoloing.GroupsInGroup.Add(EightNightsMgr.GroupID.RiftGroup1);
+      _riftSoloing.GroupsInGroup.Add(EightNightsMgr.GroupID.RiftGroup2);
+      _riftSoloing.GroupsInGroup.Add(EightNightsMgr.GroupID.RiftGroup3);
+      _riftSoloing.GroupsInGroup.Add(EightNightsMgr.GroupID.RiftGroup4);
+      _roomSoloing = new SoloGroup();
+      _roomSoloing.GroupsInGroup.Add(EightNightsMgr.GroupID.RoomGroup1);
+      _roomSoloing.GroupsInGroup.Add(EightNightsMgr.GroupID.RoomGroup2);
+      _roomSoloing.GroupsInGroup.Add(EightNightsMgr.GroupID.RoomGroup3);
+      _roomSoloing.GroupsInGroup.Add(EightNightsMgr.GroupID.RoomGroup4);
    }
 
 	void Start () 
@@ -110,13 +189,47 @@ public class EightNightsAudioMgr : MonoBehaviour
       return _peakGroupState.LoopState != StemLoopState.Off;
    }
 
-   void ResetAllStems()
+   public void ForcePeak()
    {
       foreach (GroupStateData g in _groupState)
       {
-         g.LoopState = StemLoopState.Off;
+         if(g.LoopState != StemLoopState.Sustaining)
+            g.LoopState = StemLoopState.Attacking;
+         g.CaptureTimestamp();
       }
-      _peakGroupState.LoopState = StemLoopState.Off;
+   }
+
+
+   void ResetAllStems(bool instant = false)
+   {
+      foreach (GroupStateData g in _groupState)
+      {
+         if (instant)
+         {
+            g.LoopState = StemLoopState.Off;
+         }
+         else
+         {
+            if ((g.LoopState != StemLoopState.Off) && (g.LoopState != StemLoopState.Releasing))
+            {
+               g.LoopState = StemLoopState.Releasing;
+               g.CaptureTimestamp();
+            }
+         }
+      }
+
+      if (instant)
+      {
+         _peakGroupState.LoopState = StemLoopState.Off;
+      }
+      else
+      {
+         if ((_peakGroupState.LoopState != StemLoopState.Off) && (_peakGroupState.LoopState != StemLoopState.Releasing))
+         {
+            _peakGroupState.LoopState = StemLoopState.Releasing;
+            _peakGroupState.CaptureTimestamp();
+         }
+      }
    }
 
    void ResetAllStemTimestamps()
@@ -193,6 +306,16 @@ public class EightNightsAudioMgr : MonoBehaviour
          {
             ResetAllStems();
          }
+
+      //force peak button
+         startPos.y += buttonVSpacing;
+         if (GUI.Button(new Rect(startPos.x, startPos.y, groupSize.x - 20, 20), "Force Peak"))
+         {
+            ForcePeak();
+         }
+      //dynamic solo ducking
+         startPos.y += 1.5f*buttonVSpacing;
+         EnableSoloDucking = GUI.Toggle(new Rect(startPos.x, startPos.y, groupSize.x + 50, 20),  EnableSoloDucking, "Solo Ducking");
 
       // text fields for stem tuning params
          startPos.x = Screen.width * .5f - 150;
@@ -329,15 +452,16 @@ public class EightNightsAudioMgr : MonoBehaviour
       
       //Restart Song Button
       //TODO: this code doesn't work yet, so disabling for now...
-       /*  startPos.x += 135;
+      /*   startPos.x += 135;
          startPos.y += 10;
          if(GUI.Button(new Rect(startPos.x, startPos.y, 100, 25), "Restart Song"))
          {
             MusicPlayer.Restart();
-         }*/
+         }
+      */
    }
 
-   GroupStateData GetStateForGroup(EightNightsMgr.GroupID group)
+   public GroupStateData GetStateForGroup(EightNightsMgr.GroupID group)
    {
       foreach (GroupStateData d in _groupState)
       {
@@ -358,16 +482,17 @@ public class EightNightsAudioMgr : MonoBehaviour
       if (stateData != null)
       {
          stateData.CaptureTimestamp(); //reset decay timers
-         stateData.LoopState = StemLoopState.Attacking;
-         /*if (stateData.LoopState == StemLoopState.Off)
+         //stateData.LoopState = StemLoopState.Attacking;
+         if (stateData.LoopState != StemLoopState.Sustaining)
          {
             stateData.LoopState = StemLoopState.Attacking;
          }
-         //THIS IS TEMP UNTIL BUTTON SOUNDS ARE IN!
-         else if (stateData.LoopState == StemLoopState.Releasing)
-         {
-            stateData.LoopState = StemLoopState.Attacking;
-         }*/
+      }
+
+      if (EnableSoloDucking)
+      {
+         _roomSoloing.MakeSoloist(group);
+         _riftSoloing.MakeSoloist(group);
       }
 
       //keep peak alive, add a couple seconds to peak mode
@@ -399,6 +524,24 @@ public class EightNightsAudioMgr : MonoBehaviour
 	
 	void Update () 
    {
+
+      if (EightNightsMgr.Instance == null)
+      {
+         if (Input.GetKeyDown(KeyCode.Escape))
+            Application.Quit();
+      }
+
+      //keyboard cheats
+      foreach (GroupStateData d in _groupState)
+      {
+         if (d.UseTriggerCheat && Input.GetKeyDown(d.TriggerCheat))
+            TriggerGroup(d.Group);
+      }
+
+      //Update Soloing Faders
+      _riftSoloing.Update();
+      _roomSoloing.Update();
+
       //test mode for overridding stem levels
       if (MusicTester.EnableTestMode && !ShowTestUI)
       {
@@ -488,8 +631,8 @@ public class EightNightsAudioMgr : MonoBehaviour
             }
             else if (d.LoopState == StemLoopState.Attacking)
             {
-               float u = Mathf.Clamp01( (Time.time - d.Timestamp()) / StemAttackTime );
-               MusicPlayer.SetVolumeForGroup(d.Group, u);
+               float u = Mathf.Clamp01((Time.time - d.Timestamp()) / StemAttackTime);
+               MusicPlayer.SetVolumeForGroup(d.Group, d.MasterFader * u);
 
                if (Mathf.Approximately(u, 1.0f))
                {
@@ -499,9 +642,9 @@ public class EightNightsAudioMgr : MonoBehaviour
             }
             else if (d.LoopState == StemLoopState.Sustaining)
             {
-               MusicPlayer.SetVolumeForGroup(d.Group, 1.0f);
+               MusicPlayer.SetVolumeForGroup(d.Group, d.MasterFader*1.0f);
 
-               float u = Mathf.Clamp01((Time.time - d.Timestamp()) / StemSustainTime);
+               float u =  Mathf.Clamp01((Time.time - d.Timestamp()) / StemSustainTime);
 
                if (Mathf.Approximately(u, 1.0f))
                {
@@ -512,7 +655,7 @@ public class EightNightsAudioMgr : MonoBehaviour
             else if (d.LoopState == StemLoopState.Releasing)
             {
                float u = Mathf.Clamp01((Time.time - d.Timestamp()) / StemReleaseTime);
-               MusicPlayer.SetVolumeForGroup(d.Group, 1.0f - u);
+               MusicPlayer.SetVolumeForGroup(d.Group, d.MasterFader*(1.0f - u));
 
                if (Mathf.Approximately(u, 1.0f))
                {
