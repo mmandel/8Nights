@@ -18,7 +18,7 @@ public class EightNightsMIDIMgr : MonoBehaviour
    public class EightNightsMIDIEventArgs : EventArgs
    {
       public EightNightsMIDIEventArgs(int midiNote, float beat, float durationBeats, EightNightsMgr.GroupID g) { Group = g; MidiNote = midiNote; NoteBeat = beat; DurationBeats = durationBeats; }
-      EightNightsMgr.GroupID Group;
+      public EightNightsMgr.GroupID Group;
       public int MidiNote;
       public float NoteBeat = 0.0f;
       public float DurationBeats = 0.0f;

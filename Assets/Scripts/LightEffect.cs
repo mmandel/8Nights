@@ -21,9 +21,6 @@ public class LightEffect : MonoBehaviour
    [System.Serializable]
    public class LightState
    {
-      //public int LightIdx = 0;
-
-      public EightNightsMgr.GroupID Group;
       public EightNightsMgr.LightID Light;
       
       public bool on = true;
@@ -34,15 +31,19 @@ public class LightEffect : MonoBehaviour
    [ScriptButton("Trigger!", "TriggerEffect")]
    public bool DummyTrigger;
 
+   public EightNightsMgr.GroupID LightGroup;
    public bool Loop = true;
    public bool BlendWhenLooping = true;
    public float SpeedScale = 1.0f;
+   public bool AutoTrigger = false;
    public EffectKeyframe[] Keyframes = new EffectKeyframe[1];
 
    int _curKey = -1;
    float _timeStamp = -1.0f;
    float _curTransitionTime = 0.0f;
    KeyState _curState = KeyState.kDone;
+   bool _doesControlHue = false;
+   bool _doesControlLightJams = false;
 
    enum KeyState
    {
@@ -55,13 +56,33 @@ public class LightEffect : MonoBehaviour
    // Use this for initialization
    void Start()
    {
-
+      foreach (EffectKeyframe k in Keyframes)
+      {
+         foreach (LightState l in k.LightKeys)
+         {
+            if (EightNightsMgr.Instance.IsHueLight(LightGroup, l.Light))
+               _doesControlHue = true;
+            if (EightNightsMgr.Instance.IsLightJamsLight(LightGroup, l.Light))
+               _doesControlLightJams = true;
+         }
+      }
    }
 
    void OnEnable()
    {
       //always restart effect when our script is enabled
-      TriggerEffect();
+      if(AutoTrigger)
+         TriggerEffect();
+   }
+
+   public bool ControlsHueLight()
+   {
+      return _doesControlHue;
+   }
+
+   public bool ControlsLightJamsLight()
+   {
+      return _doesControlLightJams;
    }
 
    public void TriggerEffect(string propPath = "")
@@ -126,6 +147,9 @@ public class LightEffect : MonoBehaviour
       EffectKeyframe prevKey = (_curKey >= 0) ? Keyframes[_curKey] : null;
       EffectKeyframe key = Keyframes[idx];
 
+      //we fade effects out with the volume of their group
+      float groupFader = (EightNightsAudioMgr.Instance != null) ? EightNightsAudioMgr.Instance.MusicPlayer.GetVolumeForGroup(LightGroup) : 1.0f;
+
       float transitionTime = (prevKey != null) ? SpeedScale * prevKey.BlendTime : 0.0f;
 
       //looping around, pop to first frame if configured for that
@@ -135,7 +159,7 @@ public class LightEffect : MonoBehaviour
       for (int i = 0; i < key.LightKeys.Length; i++)
       {
          LightState curState = key.LightKeys[i];
-         EightNightsMgr.Instance.SetLight(curState.Group, curState.Light, curState.fade, curState.color, transitionTime);
+         EightNightsMgr.Instance.SetLight(LightGroup, curState.Light, groupFader*curState.fade, curState.color, transitionTime);
       }
 
       if (Mathf.Approximately(key.BlendTime, 0.0f))

@@ -274,6 +274,22 @@ public class EightNightsMgr : MonoBehaviour
          return 0.0f;
    }
 
+   public bool IsHueLight(GroupID g, LightID l)
+   {
+      LightConfig lConfig = FindLightConfig(g, l);
+      if (lConfig != null)
+         return lConfig.LightType == LightTypes.Hue;
+      return false;
+   }
+
+   public bool IsLightJamsLight(GroupID g, LightID l)
+   {
+      LightConfig lConfig = FindLightConfig(g, l);
+      if (lConfig != null)
+         return lConfig.LightType == LightTypes.LightJams;
+      return false;
+   }
+
    //finds the GroupID and LightID of a light with the given channel #
    //returns false if it doesnt find a compatible light in any of the groups
    bool FindLight(int channel, LightTypes lightType, ref GroupID gID, ref LightID lID)
