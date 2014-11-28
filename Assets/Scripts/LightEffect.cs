@@ -36,6 +36,7 @@ public class LightEffect : MonoBehaviour
    public bool BlendWhenLooping = true;
    public float SpeedScale = 1.0f;
    public bool AutoTrigger = false;
+   public bool AutoDestroy = false; //do we destroy the game object we're on after playing once?
    public EffectKeyframe[] Keyframes = new EffectKeyframe[1];
 
    int _curKey = -1;
@@ -136,7 +137,9 @@ public class LightEffect : MonoBehaviour
             }
             break;
          case KeyState.kDone:
-            if (Loop)
+            if (AutoDestroy)
+               DestroyObject(this.gameObject);
+            else if (Loop)
                _curState = KeyState.kStart;
             break;
       }

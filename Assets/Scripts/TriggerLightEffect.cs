@@ -35,12 +35,31 @@ public class TriggerLightEffect : MonoBehaviour
       public bool EnableLightOverride = false;
       public EightNightsMgr.LightID LightOverride;
 
-      public void Trigger()
+
+      public void Trigger(TriggerLightEffect parentEffect)
       {
          if (LightEffectToTrigger != null)
          {
-            //TODO: instatiate new effect and override light if needed
-            LightEffectToTrigger.TriggerEffect();
+            //instatiate new effect and override light if specified
+            GameObject spawnedLightObj = Instantiate(LightEffectToTrigger.gameObject) as GameObject;
+            spawnedLightObj.transform.parent = parentEffect.transform;
+            LightEffect spawnedLightEffect = spawnedLightObj.GetComponent<LightEffect>();
+            if (EnableLightOverride)
+            {
+               foreach (LightEffect.EffectKeyframe k in spawnedLightEffect.Keyframes)
+               {
+                  foreach (LightEffect.LightState s in k.LightKeys)
+                  {
+                     s.Light = LightOverride;
+                  }
+               }
+            }
+            spawnedLightEffect.LightGroup = parentEffect.MIDIGroup;
+            spawnedLightEffect.AutoDestroy = true;
+            spawnedLightEffect.AutoTrigger = true;
+            spawnedLightEffect.TriggerEffect(); //redundant, I know
+
+            //LightEffectToTrigger.TriggerEffect();
          }
       }
    }
@@ -56,6 +75,7 @@ public class TriggerLightEffect : MonoBehaviour
    {
       if (EightNightsMIDIMgr.Instance != null)
       {
+
          bool isHue = false;
          //just assume that all the lights we control will be all hue or all light jams and subscribe accordingly
          foreach (EffectEntry e in EffectsToTrigger)
@@ -171,7 +191,7 @@ public class TriggerLightEffect : MonoBehaviour
          foreach (EffectEntry effectEntry in effectsToTrigger)
          {
             if (effectEntry.LightEffectToTrigger != null)
-               effectEntry.Trigger();
+               effectEntry.Trigger(this);
          }
       }
    }
