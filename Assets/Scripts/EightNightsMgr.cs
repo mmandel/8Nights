@@ -443,12 +443,12 @@ public class EightNightsMgr : MonoBehaviour
          _eventBlends.Remove(b);
 
       //toggle test mode with 't' key
-      if (Input.GetKeyDown(KeyCode.T))
+      /*if (Input.GetKeyDown(KeyCode.T))
       {
          TestLights = !TestLights;
          //start with lights all off
          SetAllLights(0.0f, Color.white, 0.0f);
-      }
+      }*/
 
       //run test patterns through all the lights
       if (TestLights)

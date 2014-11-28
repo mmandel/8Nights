@@ -14,6 +14,8 @@ public class EightNightsAudioMgr : MonoBehaviour
    public MusicTestData MusicTester = new MusicTestData();
 
    [Header("Tuning Values")]
+   public int BaseBPM = 84;
+   public bool StartDoubleTempo = false;
    public float StemAttackTime = 1.0f;
    public float StemSustainTime = 10.0f;
    public float StemReleaseTime = 3.0f;
@@ -27,6 +29,7 @@ public class EightNightsAudioMgr : MonoBehaviour
    private GroupStateData _peakGroupState = null;
    private SoloGroup _riftSoloing = null;
    private SoloGroup _roomSoloing = null;
+   private bool _isDoubleTempo = false;
 
    //backing loop's state
    public enum StemLoopState
@@ -175,6 +178,8 @@ public class EightNightsAudioMgr : MonoBehaviour
 
 	void Start () 
    {
+      SetIsDoubleTempo(StartDoubleTempo);
+
       MusicPlayer.SetBackingLoopVolume(1.0f);
       MusicPlayer.SetPeakLoopVolume(0.0f);
 	}
@@ -196,6 +201,17 @@ public class EightNightsAudioMgr : MonoBehaviour
          if(g.LoopState != StemLoopState.Sustaining)
             g.LoopState = StemLoopState.Attacking;
          g.CaptureTimestamp();
+      }
+   }
+
+   void SetIsDoubleTempo(bool b)
+   {
+      _isDoubleTempo = b;
+      BeatClock.Instance.bpm = (_isDoubleTempo) ? 2 * BaseBPM : BaseBPM;
+
+      foreach (EightNightsMIDIMgr.MIDIConfig c in EightNightsMIDIMgr.Instance.MIDIConfigs)
+      {
+         c.MIDIReceiver.MIDITimeMult = _isDoubleTempo ? 2.0f : 1.0f;
       }
    }
 
@@ -316,6 +332,11 @@ public class EightNightsAudioMgr : MonoBehaviour
       //dynamic solo ducking
          startPos.y += 1.5f*buttonVSpacing;
          EnableSoloDucking = GUI.Toggle(new Rect(startPos.x, startPos.y, groupSize.x + 50, 20),  EnableSoloDucking, "Solo Ducking");
+      //double tempo
+         startPos.y += buttonVSpacing;
+         bool newDoubleTempo = GUI.Toggle(new Rect(startPos.x, startPos.y, groupSize.x + 50, 20), _isDoubleTempo, "Double Tempo");
+         if (newDoubleTempo != _isDoubleTempo)
+            SetIsDoubleTempo(newDoubleTempo);
 
       // text fields for stem tuning params
          startPos.x = Screen.width * .5f - 150;
@@ -459,6 +480,14 @@ public class EightNightsAudioMgr : MonoBehaviour
             MusicPlayer.Restart();
          }
       */
+
+      //Test lights in bottom right
+      if(EightNightsMgr.Instance != null)
+      {
+         startPos.x = Screen.width - 150;
+         startPos.y = Screen.height - 30;
+         EightNightsMgr.Instance.TestLights = GUI.Toggle(new Rect(startPos.x, startPos.y, groupSize.x + 50, 20), EightNightsMgr.Instance.TestLights, "Test Lights");
+      }
    }
 
    public GroupStateData GetStateForGroup(EightNightsMgr.GroupID group)
@@ -529,6 +558,12 @@ public class EightNightsAudioMgr : MonoBehaviour
       {
          if (Input.GetKeyDown(KeyCode.Escape))
             Application.Quit();
+      }
+
+      //toggle debug UI with a key
+      if (Input.GetKeyDown(KeyCode.D))
+      {
+         ShowTestUI = !ShowTestUI;
       }
 
       //keyboard cheats

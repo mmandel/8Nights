@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NAudio.Midi;
 using System;
+using System.Reflection;
 
 public class MIDIReceiver : MonoBehaviour
 {
@@ -45,7 +46,7 @@ public class MIDIReceiver : MonoBehaviour
          _prerollSecs = prerollSecs;
       }
 
-      public System.Object CallbackTarget() { return _callback.Target; }
+      public Action<MIDIReceiverEventArgs> Callback() { return _callback; }
       public float Preroll() { return _prerollSecs; }
       public void SetPreroll(float s) { _prerollSecs = s; }
 
@@ -65,7 +66,7 @@ public class MIDIReceiver : MonoBehaviour
       PrerollSubscriber sub = null;
       foreach (PrerollSubscriber s in _preRollSubscribers)
       {
-         if (s.CallbackTarget() == callback.Target)
+         if (s.Callback() == callback)
          {
             sub = s;
             //update preroll!
@@ -87,7 +88,7 @@ public class MIDIReceiver : MonoBehaviour
       PrerollSubscriber sub = null;
       foreach (PrerollSubscriber s in _preRollSubscribers)
       {
-         if (s.CallbackTarget() == callback.Target)
+         if (s.Callback() == callback)
          {
             sub = s;
             break;

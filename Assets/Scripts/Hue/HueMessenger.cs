@@ -171,7 +171,7 @@ public class HueMessenger : MonoBehaviour
                        " \"transitiontime\": " + transitionTime +
                        "}";
          string url = "http://" + BridgeIP + apiCall;
-         Debug.Log("URL: " + url + " body: " + body + " at Time: " + Time.time + " deltaSinceLastUpdate: " + l.TimeSinceLastUpdate() + "\n");
+         //Debug.Log("URL: " + url + " body: " + body + " at Time: " + Time.time + " deltaSinceLastUpdate: " + l.TimeSinceLastUpdate() + "\n");
          HTTP.Request request = new HTTP.Request("put", "http://" + BridgeIP + apiCall, JSON.JsonDecode(body) as Hashtable);
          request.Send();
 
@@ -215,7 +215,7 @@ public class HueMessenger : MonoBehaviour
                     " \"transitiontime\": " + transitionTime +
                     "}";
       string url = "http://" + BridgeIP + apiCall;
-      Debug.Log("URL: " + url + " body: " + body + " at Time: " + Time.time + " deltaSinceLastUpdate: " + l.TimeSinceLastUpdate() + "\n");      
+      //Debug.Log("URL: " + url + " body: " + body + " at Time: " + Time.time + " deltaSinceLastUpdate: " + l.TimeSinceLastUpdate() + "\n");      
       HTTP.Request request = new HTTP.Request("put", "http://" + BridgeIP + apiCall, JSON.JsonDecode(body) as Hashtable);
       request.Send();
 
