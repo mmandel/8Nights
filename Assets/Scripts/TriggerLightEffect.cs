@@ -63,8 +63,7 @@ public class TriggerLightEffect : MonoBehaviour
                }
             }
             spawnedLightEffect.LightGroup = parentEffect.MIDIGroup;
-            spawnedLightEffect.AutoTrigger = true;
-            spawnedLightEffect.FadeWithStemVolume = true;
+            spawnedLightEffect.AutoTrigger = true;            
             spawnedLightEffect.TriggerEffect(); //redundant, I know
             if (forceLooping)
             {
@@ -73,9 +72,13 @@ public class TriggerLightEffect : MonoBehaviour
                spawnedLightEffect.Loop = true;
                _spawnedObj = spawnedLightObj;
                spawnedLightEffect.AutoDestroy = false;
+               spawnedLightEffect.FadeWithStemVolume = false;
+               spawnedLightEffect.FadeWithButtonCrescendo = true;
             }
             else //if we aren't looping then we auto destroy
             {
+               spawnedLightEffect.FadeWithStemVolume = true;
+               spawnedLightEffect.FadeWithButtonCrescendo = false;
                spawnedLightEffect.AutoDestroy = true;
                _spawnedObj = null;
             }

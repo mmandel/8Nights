@@ -38,6 +38,7 @@ public class LightEffect : MonoBehaviour
    public bool AutoTrigger = false;
    public bool AutoDestroy = false; //do we destroy the game object we're on after playing once?
    public bool FadeWithStemVolume = false;
+   public bool FadeWithButtonCrescendo = false;
    public EffectKeyframe[] Keyframes = new EffectKeyframe[1];
 
    int _curKey = -1;
@@ -153,7 +154,14 @@ public class LightEffect : MonoBehaviour
       EffectKeyframe key = Keyframes[idx];
 
       //we fade effects out with the volume of their group
-      float groupFader = (FadeWithStemVolume && (EightNightsAudioMgr.Instance != null)) ? EightNightsAudioMgr.Instance.MusicPlayer.GetVolumeForGroup(LightGroup) : 1.0f;
+      float groupFader = 1.0f;
+      if(EightNightsAudioMgr.Instance != null)
+      {
+         if (FadeWithStemVolume)
+            groupFader = EightNightsAudioMgr.Instance.MusicPlayer.GetVolumeForGroup(LightGroup);
+         else if (FadeWithButtonCrescendo)
+            groupFader = Mathf.Lerp(.33f, 1.0f, ButtonSoundMgr.Instance.GetCrescendoProgressForGroup(LightGroup));
+      }
 
       float transitionTime = (prevKey != null) ? SpeedScale * prevKey.BlendTime : 0.0f;
 
