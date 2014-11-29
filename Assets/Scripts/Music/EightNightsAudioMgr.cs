@@ -212,6 +212,7 @@ public class EightNightsAudioMgr : MonoBehaviour
       foreach (EightNightsMIDIMgr.MIDIConfig c in EightNightsMIDIMgr.Instance.MIDIConfigs)
       {
          c.MIDIReceiver.MIDITimeMult = _isDoubleTempo ? 2.0f : 1.0f;
+         c.MIDIReceiver.ReImportMIDI();
       }
    }
 
@@ -511,11 +512,12 @@ public class EightNightsAudioMgr : MonoBehaviour
       if (stateData != null)
       {
          stateData.CaptureTimestamp(); //reset decay timers
-         //stateData.LoopState = StemLoopState.Attacking;
-         if (stateData.LoopState != StemLoopState.Sustaining)
+
+         //This now happens in Update in response to crescendo progress
+         /*if (stateData.LoopState != StemLoopState.Sustaining)
          {
             stateData.LoopState = StemLoopState.Attacking;
-         }
+         }*/
       }
 
       if (EnableSoloDucking)
@@ -565,6 +567,11 @@ public class EightNightsAudioMgr : MonoBehaviour
       {
          ShowTestUI = !ShowTestUI;
       }
+
+      if (Input.GetKeyDown(KeyCode.KeypadPlus))
+         BeatClock.Instance.LatencyMs += 1000;
+      if (Input.GetKeyDown(KeyCode.KeypadMinus))
+         BeatClock.Instance.LatencyMs -= 1000;      
 
       //keyboard cheats
       foreach (GroupStateData d in _groupState)
@@ -660,6 +667,21 @@ public class EightNightsAudioMgr : MonoBehaviour
 
          foreach (GroupStateData d in _groupState)
          {
+            //handle transition to attacking:  fade in track as button crescendoing completes
+            if ((d.LoopState != StemLoopState.Sustaining) && (d.LoopState != StemLoopState.Attacking))
+            {
+               bool isCrescendoing = ButtonSoundMgr.Instance.IsGroupCrescendoing(d.Group);
+               float crescendoTimeRemaining = ButtonSoundMgr.Instance.GetCrescendoTimeRemainaingForGroup(d.Group);
+               //if(isCrescendoing)
+               //   Debug.Log("Crescendo Time Remaining for " + d.Group.ToString() + ": " + crescendoTimeRemaining);
+               if (isCrescendoing && (crescendoTimeRemaining < StemAttackTime))
+               {
+                  //Debug.Log("  ATTACK GROUP " + d.Group.ToString());
+                  d.LoopState = StemLoopState.Attacking;
+                  d.CaptureTimestamp();
+               }
+            }
+
             if (d.LoopState == StemLoopState.Off)
             {
                MusicPlayer.SetVolumeForGroup(d.Group, 0.0f);

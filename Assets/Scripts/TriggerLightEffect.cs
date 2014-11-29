@@ -12,6 +12,8 @@ public class TriggerLightEffect : MonoBehaviour
 
    public TriggerMode TriggerRule = TriggerMode.Sequential; //how do we pick an effect to trigger?
 
+   public EffectEntry ButtonEffect = null;
+
    public EffectEntry[] EffectsToTrigger = new EffectEntry[1]; //the actual effects
 
    public MIDINoteMapping[] NoteMappings = new MIDINoteMapping[0]; //optional mappings from midi notes to particular effects
@@ -35,9 +37,15 @@ public class TriggerLightEffect : MonoBehaviour
       public bool EnableLightOverride = false;
       public EightNightsMgr.LightID LightOverride;
 
+      private GameObject _spawnedObj = null;
 
-      public void Trigger(TriggerLightEffect parentEffect)
+
+      public void Trigger(TriggerLightEffect parentEffect, bool forceLooping = false)
       {
+         //if we have a looping effect playing, ignore...
+         if (_spawnedObj != null)
+            return;
+
          if (LightEffectToTrigger != null)
          {
             //instatiate new effect and override light if specified
@@ -55,11 +63,33 @@ public class TriggerLightEffect : MonoBehaviour
                }
             }
             spawnedLightEffect.LightGroup = parentEffect.MIDIGroup;
-            spawnedLightEffect.AutoDestroy = true;
             spawnedLightEffect.AutoTrigger = true;
+            spawnedLightEffect.FadeWithStemVolume = true;
             spawnedLightEffect.TriggerEffect(); //redundant, I know
+            if (forceLooping)
+            {
+               KillEffect(); //kill any previous version of this effect
+
+               spawnedLightEffect.Loop = true;
+               _spawnedObj = spawnedLightObj;
+               spawnedLightEffect.AutoDestroy = false;
+            }
+            else //if we aren't looping then we auto destroy
+            {
+               spawnedLightEffect.AutoDestroy = true;
+               _spawnedObj = null;
+            }
 
             //LightEffectToTrigger.TriggerEffect();
+         }
+      }
+
+      public void KillEffect()
+      {
+         if (_spawnedObj != null)
+         {
+            DestroyObject(_spawnedObj);
+            _spawnedObj = null;
          }
       }
    }
@@ -94,7 +124,43 @@ public class TriggerLightEffect : MonoBehaviour
          else
             EightNightsMIDIMgr.Instance.OnLightJamsNoteOn += OnLightMIDIEvent;
       }
+
+      //register to find out about button crescendos
+      if (ButtonSoundMgr.Instance != null)
+      {
+         ButtonSoundMgr.Instance.OnCrescendoBegin += OnCrescendoBegin;
+         ButtonSoundMgr.Instance.OnCrescendoEnd   += OnCrescendoEnd;
+      }
 	}
+
+   void OnCrescendoBegin(object sender, ButtonSoundMgr.ButtonCrescendoEventArgs e)
+   {
+      if (e.Group == MIDIGroup)
+      {
+         Debug.Log("Crescendo BEGIN for group '" + e.Group.ToString());
+
+         //trigger looping button effect
+         if (ButtonEffect != null)
+            ButtonEffect.Trigger(this, true);
+
+      }
+   }
+
+   void OnCrescendoEnd(object sender, ButtonSoundMgr.ButtonCrescendoEventArgs e)
+   {
+      if (e.Group == MIDIGroup)
+      {
+         Debug.Log("Crescendo END for group '" + e.Group.ToString());
+
+         //stop looping button effect
+         if (ButtonEffect != null)
+         {
+            //reset all lights in group, so nothing lingers...
+            EightNightsMgr.Instance.SetAllLightsInGroup(MIDIGroup, 0.0f);
+            ButtonEffect.KillEffect();
+         }
+      }
+   }
 
    bool IsGroupPlaying()
    {
@@ -183,7 +249,7 @@ public class TriggerLightEffect : MonoBehaviour
 
    void OnLightMIDIEvent(object sender, EightNightsMIDIMgr.EightNightsMIDIEventArgs e)
    {
-      if ((e.Group == MIDIGroup) && IsGroupPlaying())
+      if ((e.Group == MIDIGroup) && IsGroupPlaying() && !ButtonSoundMgr.Instance.IsGroupCrescendoing(MIDIGroup))
       {
          //pick an effect to trigger
          List<EffectEntry> effectsToTrigger = PickEffects(e);

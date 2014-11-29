@@ -99,7 +99,7 @@ public class MIDIReceiver : MonoBehaviour
          _preRollSubscribers.Remove(sub);
    }
 
-   public void ReImport()
+   public void ReImportMIDI()
    {
       MidiFile mid = new MidiFile(MIDIResourcePath);
       if (mid.Events == null)
@@ -123,7 +123,7 @@ public class MIDIReceiver : MonoBehaviour
                newNote.DurationBeats = MIDITimeMult*((float)noteEvent.NoteLength / (float)mid.DeltaTicksPerQuarterNote);
                _noteOns.Add(newNote);
 
-               Debug.Log("  imported midi Note " + noteEvent.NoteNumber + " at beat " + newNote.NoteOnBeat + " duration " + newNote.DurationBeats);
+               //Debug.Log("  imported midi Note " + noteEvent.NoteNumber + " at beat " + newNote.NoteOnBeat + " duration " + newNote.DurationBeats);
             }
             catch (System.SystemException e) { Debug.Log("Error during midi import: " + e.Message); }
          }
@@ -132,7 +132,7 @@ public class MIDIReceiver : MonoBehaviour
 
    void Awake()
    {
-      ReImport();
+      ReImportMIDI();
    }
 
    void Update()

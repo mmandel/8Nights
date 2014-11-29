@@ -37,12 +37,13 @@ public class LightEffect : MonoBehaviour
    public float SpeedScale = 1.0f;
    public bool AutoTrigger = false;
    public bool AutoDestroy = false; //do we destroy the game object we're on after playing once?
+   public bool FadeWithStemVolume = false;
    public EffectKeyframe[] Keyframes = new EffectKeyframe[1];
 
    int _curKey = -1;
    float _timeStamp = -1.0f;
    float _curTransitionTime = 0.0f;
-   KeyState _curState = KeyState.kDone;
+   KeyState _curState = KeyState.kOff;
    bool _doesControlHue = false;
    bool _doesControlLightJams = false;
 
@@ -51,7 +52,8 @@ public class LightEffect : MonoBehaviour
       kDone,
       kStart,
       kHolding,
-      kBlending
+      kBlending,
+      kOff
    };
 
    // Use this for initialization
@@ -151,7 +153,7 @@ public class LightEffect : MonoBehaviour
       EffectKeyframe key = Keyframes[idx];
 
       //we fade effects out with the volume of their group
-      float groupFader = (EightNightsAudioMgr.Instance != null) ? EightNightsAudioMgr.Instance.MusicPlayer.GetVolumeForGroup(LightGroup) : 1.0f;
+      float groupFader = (FadeWithStemVolume && (EightNightsAudioMgr.Instance != null)) ? EightNightsAudioMgr.Instance.MusicPlayer.GetVolumeForGroup(LightGroup) : 1.0f;
 
       float transitionTime = (prevKey != null) ? SpeedScale * prevKey.BlendTime : 0.0f;
 

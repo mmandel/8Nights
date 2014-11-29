@@ -259,6 +259,19 @@ public class EightNightsMgr : MonoBehaviour
          }
       }
    }
+
+   public void SetAllLightsInGroup(GroupID group, float intensity, Color color = default(Color), float transitionTime = 0.0f)
+   {
+         LightGroupConfig lg = FindGroupConfig(group);
+         if(lg != null)
+         {
+            for (int j = 0; j < lg.Lights.Length; j++)
+            {
+               LightConfig lc = lg.Lights[j];
+               lc.Set(color, intensity, transitionTime);
+            }
+         }
+   }
    
    //get latency for the given light.  Meaning this is how long it takes to set a value, and have it appear on the lights.
    public float GetLatency(GroupID gID, LightID lID)
