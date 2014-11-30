@@ -10,6 +10,8 @@ public class CameraMgr : MonoBehaviour
 
    public Transform DebugRotateTrans;
    public GameObject RiftCamera;
+   public GameObject RiftCamLeft;
+   public GameObject RiftCamRight;
    public GameObject NormalCamera;
    public OVRManager RiftMgr;
    public bool StartWithRiftCam = false;
@@ -32,6 +34,11 @@ public class CameraMgr : MonoBehaviour
       ActivateRiftCam(StartWithRiftCam);
 	}
 
+   public Transform GetCamTrans()
+   {
+      return _riftCamActivated ? RiftCamLeft.transform : NormalCamera.transform;
+   }
+
    void ActivateRiftCam(bool b)
    {
       _riftCamActivated = b;
@@ -49,6 +56,8 @@ public class CameraMgr : MonoBehaviour
       if (Input.GetKeyDown(KeyCode.C))
          ActivateRiftCam(!_riftCamActivated);
    }
+
+
 	
 	void Update () 
    {
