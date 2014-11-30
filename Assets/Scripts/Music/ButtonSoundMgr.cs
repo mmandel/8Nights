@@ -150,6 +150,9 @@ public class ButtonSoundMgr : MonoBehaviour
       if ((c != null) && (c.MusicPlayer != null))
       {
 
+         if (EightNightsMgr.Instance != null)
+            EightNightsMgr.Instance.SendButtonTriggeredEvent(group);
+
          if (!c.AlignToDownBeat) //just fire off one-off
          {
             //TODO: should spawn these things so we don't have to cut anything off

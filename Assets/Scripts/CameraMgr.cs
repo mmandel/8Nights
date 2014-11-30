@@ -45,9 +45,12 @@ public class CameraMgr : MonoBehaviour
 
 
       RiftMgr.enabled = _riftCamActivated;
+      //RiftCamera.SetActive(_riftCamActivated); //oculus stuff gets unstable if you do this...
+      
+      NormalCamera.SetActive(!_riftCamActivated);
 
-      //RiftCamera.SetActive(_riftCamActivated);
-      //NormalCamera.SetActive(!_riftCamActivated);
+      if (EightNightsAudioMgr.Instance != null)
+         EightNightsAudioMgr.Instance.ShowTestUI = !_riftCamActivated;
    }
 
    void LateUpdate()

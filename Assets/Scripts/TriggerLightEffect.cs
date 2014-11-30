@@ -40,7 +40,7 @@ public class TriggerLightEffect : MonoBehaviour
       private GameObject _spawnedObj = null;
 
 
-      public void Trigger(TriggerLightEffect parentEffect, bool forceLooping = false)
+      public void Trigger(TriggerLightEffect parentEffect, bool forceLooping = false, EightNightsMIDIMgr.EightNightsMIDIEventArgs midiEvent = null)
       {
          //if we have a looping effect playing, ignore...
          if (_spawnedObj != null)
@@ -74,6 +74,7 @@ public class TriggerLightEffect : MonoBehaviour
                spawnedLightEffect.AutoDestroy = false;
                spawnedLightEffect.FadeWithStemVolume = false;
                spawnedLightEffect.FadeWithButtonCrescendo = true;
+              
             }
             else //if we aren't looping then we auto destroy
             {
@@ -81,6 +82,19 @@ public class TriggerLightEffect : MonoBehaviour
                spawnedLightEffect.FadeWithButtonCrescendo = false;
                spawnedLightEffect.AutoDestroy = true;
                _spawnedObj = null;
+
+               //send out event that we're triggering an effect on a particular light
+               if ((EightNightsMgr.Instance != null) && (midiEvent != null))
+               {
+                  //assume all the lights its driving are the same
+                  EightNightsMgr.LightID lID = spawnedLightEffect.Keyframes[0].LightKeys[0].Light;
+                  //queue this up to send out once latency is elapsed
+                  LightTriggerEvent delayedEvent = new LightTriggerEvent();
+                  delayedEvent.Group = parentEffect.MIDIGroup;
+                  delayedEvent.Light = lID;
+                  delayedEvent.BeatTime = midiEvent.NoteBeat;
+                  parentEffect.AddDelayedEvent(delayedEvent);
+               }
             }
 
             //LightEffectToTrigger.TriggerEffect();
@@ -96,6 +110,17 @@ public class TriggerLightEffect : MonoBehaviour
          }
       }
    }
+
+   //an event to send out at the time a light effect is expected to trigger (assuming latency has elapsed)
+   public class LightTriggerEvent
+   {
+      public float BeatTime = 0.0f;
+      public EightNightsMgr.GroupID Group;
+      public EightNightsMgr.LightID Light;
+   }
+
+   private List<LightTriggerEvent> _triggeredEventsToTrack = new List<LightTriggerEvent>();
+   public void AddDelayedEvent(LightTriggerEvent e) { _triggeredEventsToTrack.Add(e); }
 
    [System.Serializable]
    public class MIDINoteMapping
@@ -136,6 +161,28 @@ public class TriggerLightEffect : MonoBehaviour
       }
 	}
 
+   void Update()
+   {
+      //process delayed events
+      if (EightNightsMgr.Instance != null)
+      {
+         float curBeat = BeatClock.Instance.elapsedBeats;
+
+         List<LightTriggerEvent> eventsToRemove = new List<LightTriggerEvent>();
+         foreach (LightTriggerEvent e in _triggeredEventsToTrack)
+         {
+            if (curBeat >= e.BeatTime)
+            {
+               EightNightsMgr.Instance.SendLightTriggeredEvent(e.Group, e.Light);
+               eventsToRemove.Add(e);
+            }
+         }
+
+         foreach (LightTriggerEvent e in eventsToRemove)
+            _triggeredEventsToTrack.Remove(e);
+      }
+   }
+
    void OnCrescendoBegin(object sender, ButtonSoundMgr.ButtonCrescendoEventArgs e)
    {
       if (e.Group == MIDIGroup)
@@ -144,7 +191,7 @@ public class TriggerLightEffect : MonoBehaviour
 
          //trigger looping button effect
          if (ButtonEffect != null)
-            ButtonEffect.Trigger(this, true);
+            ButtonEffect.Trigger(this, true, null);
 
       }
    }
@@ -260,7 +307,7 @@ public class TriggerLightEffect : MonoBehaviour
          foreach (EffectEntry effectEntry in effectsToTrigger)
          {
             if (effectEntry.LightEffectToTrigger != null)
-               effectEntry.Trigger(this);
+               effectEntry.Trigger(this, false, e);
          }
       }
    }

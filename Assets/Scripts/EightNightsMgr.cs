@@ -17,6 +17,8 @@ public class EightNightsMgr : MonoBehaviour
 
    //events
    public event LightHandler OnLightChanged; //send out whenever a physical light is updated
+   public event LightTriggeredHandler OnLightEffectTriggered; //send out whenver an effect is triggered on a light
+   public event ButtonTriggeredHandler OnButtonTriggered; //send out whenver a button is triggered for a group
    public class LightEventArgs : EventArgs
    {
       public LightEventArgs(GroupID g, LightID l, LightTypes lt, LightData d) { Group = g; Light = l; LightType = lt;  Data = d; }
@@ -26,6 +28,22 @@ public class EightNightsMgr : MonoBehaviour
       public LightData Data;
    }
    public delegate void LightHandler(object sender, LightEventArgs e);
+
+   public class LightTriggeredEventArgs : EventArgs
+   {
+      public LightTriggeredEventArgs(GroupID g, LightID l) { Group = g; Light = l; }
+      public GroupID Group;
+      public LightID Light;
+   }
+   public delegate void LightTriggeredHandler(object sender, LightTriggeredEventArgs e);
+
+   public class ButtonTriggeredEventArgs : EventArgs
+   {
+      public ButtonTriggeredEventArgs(GroupID g) { Group = g;}
+      public GroupID Group;
+   }
+   public delegate void ButtonTriggeredHandler(object sender, ButtonTriggeredEventArgs e);
+
 
    //identifiers for each group of lights
    public enum GroupID
@@ -301,6 +319,18 @@ public class EightNightsMgr : MonoBehaviour
       if (lConfig != null)
          return lConfig.LightType == LightTypes.LightJams;
       return false;
+   }
+
+   public void SendLightTriggeredEvent(GroupID g, LightID l)
+   {
+      if (OnLightEffectTriggered != null)
+         OnLightEffectTriggered(this, new LightTriggeredEventArgs(g, l));
+   }
+
+   public void SendButtonTriggeredEvent(GroupID g)
+   {
+      if (OnButtonTriggered != null)
+         OnButtonTriggered(this, new ButtonTriggeredEventArgs(g));
    }
 
    //finds the GroupID and LightID of a light with the given channel #

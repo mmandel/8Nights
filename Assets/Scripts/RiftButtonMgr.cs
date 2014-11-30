@@ -68,7 +68,7 @@ public class RiftButtonMgr : MonoBehaviour
          float progressU = 1.0f - Mathf.InverseLerp(ProgressAngleThreshMin, ProgressAngleThreshMax, angle);
          b.SelectionProgress = progressU;
 
-         if (angle < smallestAngle)
+         if ((angle < smallestAngle) && (angle < ProgressAngleThreshMax))
          {
             smallestAngle = angle;
             closestButton = b;
@@ -76,8 +76,7 @@ public class RiftButtonMgr : MonoBehaviour
       }
 
       //select the closest button you are looking at
-      if (closestButton != null)
-         _selectedButton = closestButton;
+      _selectedButton = closestButton;
       
       //update selection state
       foreach (RiftButton b in RiftButtons)
@@ -86,7 +85,7 @@ public class RiftButtonMgr : MonoBehaviour
       }
 
       //handle keyboard cheat button press
-      if (Input.GetKeyDown(PressCheat))
+      if (Input.GetKeyDown(PressCheat) ||  Input.GetButtonDown("Fire1"))
          PressButton();
 
       //handle arduino button press
