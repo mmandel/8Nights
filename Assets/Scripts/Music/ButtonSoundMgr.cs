@@ -9,6 +9,8 @@ using System;
 
 public class ButtonSoundMgr : MonoBehaviour 
 {
+   [Range(0.0f, 1.0f)]
+   public float MasterFader = 1.0f;
    public float FadeInTime = .25f;
    public float MinCrescendoTime = 1.5f;
    public ButtonConfig[] ButtonConfigs;
@@ -124,7 +126,7 @@ public class ButtonSoundMgr : MonoBehaviour
             float prevProgress = _crescendoProgress;
             _crescendoProgress = Mathf.InverseLerp(_scheduleStartTime, _scheduleEndTime, curTime);
 
-            MusicPlayer.audio.volume = GetCrescendoFade();
+            MusicPlayer.audio.volume = ButtonSoundMgr.Instance.MasterFader * GetCrescendoFade();
 
             //done? then send out event
             if (!Mathf.Approximately(prevProgress, 1.0f) && Mathf.Approximately(_crescendoProgress, 1.0f))
