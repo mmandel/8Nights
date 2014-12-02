@@ -9,6 +9,8 @@ using System;
 
 public class ButtonSoundMgr : MonoBehaviour 
 {
+   public float FadeInTime = .25f;
+   public float MinCrescendoTime = 1.5f;
    public ButtonConfig[] ButtonConfigs;
 
    public static ButtonSoundMgr Instance { get; private set; }
@@ -32,6 +34,11 @@ public class ButtonSoundMgr : MonoBehaviour
       public bool AlignToDownBeat = false;
       public float DownBeatMoment = 1.5f;
 
+      float BeatsToSecs(float beats)
+      {
+         return (60.0f / BeatClock.Instance.bpm) * beats;
+      }
+
       public void ScheduleForDownBeat() 
       { 
          if (!_scheduling)
@@ -42,10 +49,14 @@ public class ButtonSoundMgr : MonoBehaviour
 
             float beatsPerMeasure = (float)BeatClock.Instance.beatsPerMeasure;
             float beatsTillNextDownBeat = (beatsPerMeasure - (_scheduleStartBeat % beatsPerMeasure));
+
+            if (BeatsToSecs(beatsTillNextDownBeat) < ButtonSoundMgr.Instance.MinCrescendoTime)
+               beatsTillNextDownBeat += beatsPerMeasure;
+
             _nextDownBeat = _scheduleStartBeat + beatsTillNextDownBeat;
             Debug.Log(" CurBeat = " + _scheduleStartBeat + " next DownBeat: " + _nextDownBeat + " beatsTillDownBeat = " + beatsTillNextDownBeat);
 
-            float crescendoTime = (60.0f / BeatClock.Instance.bpm) * beatsTillNextDownBeat;
+            float crescendoTime = BeatsToSecs( beatsTillNextDownBeat);
             _scheduleEndTime = _scheduleStartTime + crescendoTime;
 
             ButtonSoundMgr.Instance.SendCrescendoBeginEvent(Group, crescendoTime);
@@ -68,6 +79,19 @@ public class ButtonSoundMgr : MonoBehaviour
             if (timeRemaining < 0.0f)
                timeRemaining = 0.0f;
             return timeRemaining;
+         }
+      }
+
+      //0..1 volume fade for crescendo sound
+      float GetCrescendoFade()
+      {
+         if (_scheduleStartTime < 0.0f)
+            return 0.0f;
+         else
+         {
+            float curTime = BeatClock.Instance.elapsedSecs;
+            float elapsed = curTime - _scheduleStartTime;
+            return Mathf.InverseLerp(0.0f, ButtonSoundMgr.Instance.FadeInTime, elapsed);
          }
       }
 
@@ -99,6 +123,8 @@ public class ButtonSoundMgr : MonoBehaviour
             float curTime = BeatClock.Instance.elapsedSecs;
             float prevProgress = _crescendoProgress;
             _crescendoProgress = Mathf.InverseLerp(_scheduleStartTime, _scheduleEndTime, curTime);
+
+            MusicPlayer.audio.volume = GetCrescendoFade();
 
             //done? then send out event
             if (!Mathf.Approximately(prevProgress, 1.0f) && Mathf.Approximately(_crescendoProgress, 1.0f))
