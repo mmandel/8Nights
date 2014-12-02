@@ -86,7 +86,9 @@ public class EightNightsAudioMgr : MonoBehaviour
             if (sd == null)
                continue;
 
-            if ((g == _lastSoloist) || !soloingActive) //drive master fader towards 1
+            bool isCrescendoing = ButtonSoundMgr.Instance.IsGroupCrescendoing(sd.Group);
+
+            if (((g == _lastSoloist) && !isCrescendoing) || !soloingActive) //drive master fader towards 1
             {
                sd.MasterFader += soloSpeed * Time.deltaTime;
                sd.MasterFader = Mathf.Clamp01(sd.MasterFader);
