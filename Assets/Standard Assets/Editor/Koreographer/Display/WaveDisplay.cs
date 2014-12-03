@@ -298,21 +298,13 @@ public class WaveDisplay
 
 	public int GetSamplePositionOfPoint(Vector2 loc, WaveDisplayState displayState)
 	{
-		int samplePos = -1;
+		float drawStart = GetDrawStart(displayState);
+		float distFromContentStart = loc.x - waveContentRect.x;
 
-		if (ContainsPoint(loc))
-		{
-			float drawStart = GetDrawStart(displayState);
+		int samplePos = displayState.firstSamplePackToDraw + displayState.samplesPerPixel * (int)(distFromContentStart - drawStart);
 
-			float distFromContentStart = loc.x - waveContentRect.x;
-
-			if (distFromContentStart > drawStart)
-			{
-				samplePos = displayState.firstSamplePackToDraw + displayState.samplesPerPixel * (int)(distFromContentStart - drawStart);
-			}
-		}
-
-		return samplePos;
+		// Disallow negative numbers!
+		return Mathf.Max(samplePos, 0);
 	}
 
 	public float GetHorizontalLocOfSample(int samplePos, WaveDisplayState displayState)

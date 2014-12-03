@@ -130,9 +130,10 @@ public class AudioBus : MonoBehaviour
 		//AudioSettings.SetDSPBufferSize(256, 4);
 	}
 
+
    void OnDestroy()
    {
-      if(busClip != null)
+      if (busClip != null)
          Object.DestroyImmediate(busClip);
    }
 	

@@ -22,6 +22,44 @@ public partial class KoreographyTrack
 	#endregion
 }
 
+public static class CurvePayloadEventExtensions
+{
+	#region KoreographyEvent Extension Methods
+
+	public static bool HasCurvePayload(this KoreographyEvent koreoEvent)
+	{
+		return (koreoEvent.Payload as CurvePayload) != null;
+	}
+
+	public static AnimationCurve GetCurveValue(this KoreographyEvent koreoEvent)
+	{
+		AnimationCurve retVal = null;
+
+		CurvePayload pl = koreoEvent.Payload as CurvePayload;
+		if (pl != null)
+		{
+			retVal = pl.CurveData;
+		}
+
+		return retVal;
+	}
+
+	public static float GetValueOfCurveAtTime(this KoreographyEvent koreoEvent, int sampleTime)
+	{
+		float retVal = 0f;
+
+		CurvePayload pl = koreoEvent.Payload as CurvePayload;
+		if (pl != null)
+		{
+			retVal = pl.GetValueAtDelta(koreoEvent.GetEventDeltaAtSampleTime(sampleTime));
+		}
+
+		return retVal;
+	}
+
+	#endregion
+}
+
 [System.Serializable]
 public class CurvePayload : KoreographyPayload
 {

@@ -11,7 +11,10 @@ using System.Linq;
 
 public class WaveDisplayState
 {
-	public int samplesPerPixel = 1;
+	// TODO: Calculate this to take SampleRate of clip into account.
+	public static int s_DefaultSamplesPerPixel = 990;
+
+	public int samplesPerPixel = s_DefaultSamplesPerPixel;
 	public int drawStartOffsetInPixels = 0;
 	public int firstSamplePackToDraw = 0;
 	public int playheadSamplePosition = 0;
@@ -20,6 +23,11 @@ public class WaveDisplayState
 
 public class KoreographyEditor : EditorWindow
 {
+	#region Static Fields
+
+	static string ConfigFileName = "KoreographerSettings";
+
+	#endregion
 	#region Fields
 
 	bool bIsWaveDisplayFocused = false;
@@ -39,6 +47,7 @@ public class KoreographyEditor : EditorWindow
 	WaveDisplayState displayState = new WaveDisplayState();
 
 	WaveDisplay waveDisplay = null;
+	Rect fullWaveContentRect;
 
 	int maxSamplesPerPixel = 1;
 
@@ -101,6 +110,7 @@ public class KoreographyEditor : EditorWindow
 	{
 		Select,
 		Author,
+		Clone,
 	}
 
 	ControlMode controlMode = ControlMode.Select;
@@ -131,8 +141,20 @@ public class KoreographyEditor : EditorWindow
 	[MenuItem("Audio Tools/Koreography Editor")]
 	static void ShowWindow()
 	{
-		EditorWindow win = EditorWindow.GetWindow(typeof(KoreographyEditor), false, "Koreography Editor");
-		win.minSize = new Vector2(900f, 710f);
+		KoreographyEditor win = EditorWindow.GetWindow<KoreographyEditor>("Koreography Editor");
+
+		// Check for/place the config file in the Library folder (EditorSettings are in there, too).
+		string configPath = Application.dataPath + "/../Library/" + KoreographyEditor.ConfigFileName;
+
+		// First run?
+		if (!System.IO.File.Exists(configPath))
+		{
+			// Save off a file so that next run this won't be found.
+			File.WriteAllText(configPath, "0");
+
+			// Adjust the size of the window to show the entire view.
+			win.position = win.position = new Rect(50f, 50f, 900f, 710f);
+		}
 	}
 
 	#endregion
@@ -331,20 +353,32 @@ public class KoreographyEditor : EditorWindow
 				switch (Event.current.commandName)
 				{
 				case "Cut":
-					CutSelectedEvents();
-					Event.current.Use();
+					if (selectedEvents.Count > 0 && bIsWaveDisplayFocused)
+					{
+						CutSelectedEvents();
+						Event.current.Use();
+					}
 					break;
 				case "Copy":
-					CopySelectedEvents();
-					Event.current.Use();
+					if (selectedEvents.Count > 0 && bIsWaveDisplayFocused)
+					{
+						CopySelectedEvents();
+						Event.current.Use();
+					}
 					break;
 				case "Paste":
-					PasteOverSelectedEvents();
-					Event.current.Use();
+					if (clippedEvents.Count > 0 && selectedEvents.Count > 0 && bIsWaveDisplayFocused && waveDisplay != null)
+					{
+						PasteOverSelectedEvents();
+						Event.current.Use();
+					}
 					break;
 				case "SelectAll":
-					SelectAll();
-					Event.current.Use();
+					if (editTrack != null && bIsWaveDisplayFocused)
+					{
+						SelectAll();
+						Event.current.Use();
+					}
 					break;
 				case "UndoRedoPerformed":
 					Event.current.Use();
@@ -468,7 +502,7 @@ public class KoreographyEditor : EditorWindow
 		{
 			// Get the save location and file type.  Then massage it for the AssetDatabase functions.
 			string path = string.Empty;
-			if (assetPath == string.Empty)
+			if (string.IsNullOrEmpty(assetPath))
 			{
 				path = EditorUtility.SaveFilePanelInProject("Save New Koreography Asset...", "NewKoreography",
 			    	                                               "asset", "Select a location and file name for the new Koreography.");
@@ -478,7 +512,7 @@ public class KoreographyEditor : EditorWindow
 				path = EditorUtility.SaveFilePanel("Save New Koreography Asset...", assetPath, "NewKoreography", "asset");
 			}
 
-			if (path != string.Empty)
+			if (!string.IsNullOrEmpty(path))
 			{
 				assetPath = path;		// Store off valid path.
 			}
@@ -775,7 +809,7 @@ public class KoreographyEditor : EditorWindow
 		{
 			// Get an asset path and massage it to work with the loading mechanisms.
 			string path = EditorUtility.OpenFilePanel("Select an KoreographyTrack Asset...", assetPath, "asset");
-			if (path != string.Empty)
+			if (!string.IsNullOrEmpty(path))
 			{
 				assetPath = path;		// Store off valid path.
 			}
@@ -827,7 +861,7 @@ public class KoreographyEditor : EditorWindow
 		{
 			// Get the save location and file type.  Then massage it for the AssetDatabase functions.
 			string path = string.Empty;
-			if (assetPath == string.Empty)
+			if (string.IsNullOrEmpty(assetPath))
 			{
 				path = EditorUtility.SaveFilePanelInProject("Save New KoreographyTrack Asset...", "NewKoreographyTrack",
 			    	                                             "asset", "Select a location and file name for the new Track.");
@@ -837,7 +871,7 @@ public class KoreographyEditor : EditorWindow
 				path = EditorUtility.SaveFilePanel("Save New KoreographyTrack Asset...", assetPath, "NewKoreographyTrack", "asset");
 			}
 
-			if (path != string.Empty)
+			if (!string.IsNullOrEmpty(path))
 			{
 				assetPath = path;		// Store off valid path.
 			}
@@ -927,9 +961,13 @@ public class KoreographyEditor : EditorWindow
 			{
 				controlMode = ControlMode.Select;
 			}
-			if (GUILayout.Toggle(controlMode == ControlMode.Author, new GUIContent("Draw", "(s) Put the editor in Draw mode"), EditorStyles.miniButtonRight, GUILayout.Width(45), GUILayout.Height(20)))
+			if (GUILayout.Toggle(controlMode == ControlMode.Author, new GUIContent("Draw", "(s) Put the editor in Draw mode"), EditorStyles.miniButtonMid, GUILayout.Width(45), GUILayout.Height(20)))
 			{
 				controlMode = ControlMode.Author;
+			}
+			if (GUILayout.Toggle(controlMode == ControlMode.Clone, new GUIContent("Clone", "(d) Put the editor in Clone mode"), EditorStyles.miniButtonRight, GUILayout.Width(45), GUILayout.Height(20)))
+			{
+				controlMode = ControlMode.Clone;
 			}
 
 			GUILayout.FlexibleSpace();
@@ -1047,6 +1085,14 @@ public class KoreographyEditor : EditorWindow
 						}
 					}
 
+					// This is used to detect when the scrollbar is clicked.  The WaveContentRect is adjusted to fit only the wave contents.
+					//  The difference between these two rects is, essentially, the scrollbar.  The movement of 4 pixels means that there's likely
+					//  a clickable area near the top but this should be fine for now.
+					if (Event.current.type == EventType.Repaint)
+					{
+						fullWaveContentRect = GUILayoutUtility.GetLastRect();
+					}
+
 					Rect waveBoxRect = GUILayoutUtility.GetLastRect();
 					waveBoxRect.width = windowWidth;
 					waveBoxRect.height = windowHeight;
@@ -1057,9 +1103,9 @@ public class KoreographyEditor : EditorWindow
 #if UNITY_5_0
 					// Make sure we fill up with AudioData if it's finally loaded.
 					if (Event.current.type == EventType.Repaint &&
-					    !waveDisplay.HasAudioData() &&
-					    EditClip != null &&
-					    EditClip.isReadyToPlay)  // Background loading is finished!
+					    !waveDisplay.HasAudioData() &&						// The WaveDisplay doesn't have any data yet and
+					    EditClip != null &&									// We have a valid AudioClip reference set
+					    EditClip.loadState == AudioDataLoadState.Loaded)	// And the background loading is finished!
 					{
 						waveDisplay.SetAudioData(EditClip);
 					}
@@ -1569,8 +1615,16 @@ public class KoreographyEditor : EditorWindow
 		// Wrap up.  All other controls have had their chance.  Left-over keys can be used here.
 		if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
 		{
-			// Use the escape key to push focus to the WaveDisplay!
-			FocusWaveDisplayWindow();
+			// Use the escape key to push focus to the WaveDisplay or clear event selection.
+			if (!bIsWaveDisplayFocused)
+			{
+				FocusWaveDisplayWindow();
+			}
+			else
+			{
+				selectedEvents.Clear();
+			}
+
 			Event.current.Use();
 		}
 	}
@@ -1583,10 +1637,12 @@ public class KoreographyEditor : EditorWindow
 		AudioImporter clipImporter = AudioImporter.GetAtPath(AssetDatabase.GetAssetPath(clip)) as AudioImporter;
 
 #if UNITY_5_0
+		AudioImporterSampleSettings sampleSettings = clipImporter.GetOverrideSampleSettings(BuildTargetGroup.Standalone);
+
 		// Internal testing shows that AudioClips with Format "PCM" and LoadType
 		//  "CompressedInMemory" also works.  Allow this as well.
-		return clipImporter.loadType == AudioClipLoadType.DecompressOnLoad ||
-			  (clipImporter.loadType == AudioClipLoadType.CompressedInMemory && clipImporter.format == AudioClipFormat.PCM);
+		return clip.loadType == AudioClipLoadType.DecompressOnLoad ||
+			  (clip.loadType == AudioClipLoadType.CompressedInMemory && sampleSettings.compressionFormat == AudioCompressionFormat.PCM);
 #else
 		//  Internal testing shows that LoadType "StreamFromDisc" also works.  The Native 
 		//   format (WAV) only supports those two options so we simply allow them.
@@ -1613,7 +1669,7 @@ public class KoreographyEditor : EditorWindow
 			// Clear out related objects.
 			editTempoSection = null;
 			editTrack = null;
-			waveDisplay = null;
+			ClearWaveDisplay();
 		}
 		else		// Load in associated metadata.
 		{
@@ -1624,7 +1680,7 @@ public class KoreographyEditor : EditorWindow
 			}
 			else
 			{
-				waveDisplay = null;
+				ClearWaveDisplay();
 			}
 			
 			// Load in an Edit Track if one exists!
@@ -1660,6 +1716,12 @@ public class KoreographyEditor : EditorWindow
 		dragSelectedEvents.Clear();
 	}
 
+	void ClearWaveDisplay()
+	{
+		waveDisplay = null;
+		fullWaveContentRect = new Rect();
+	}
+
 	void InitNewClip(AudioClip newClip)
 	{
 		StopAudio();
@@ -1673,7 +1735,7 @@ public class KoreographyEditor : EditorWindow
 			newClip.LoadAudioData();
 		}
 
-		if (newClip.isReadyToPlay)
+		if (newClip.loadState == AudioDataLoadState.Loaded)
 		{
 			waveDisplay.SetAudioData(newClip);
 		}
@@ -1681,7 +1743,10 @@ public class KoreographyEditor : EditorWindow
 		waveDisplay.SetAudioData(newClip);
 #endif
 
+		// Adjust the max samples per pixel (zoom all the way out such that the waveform just fits in the display)
+		//  and ensure that we're within the maximum settings.
 		maxSamplesPerPixel = waveDisplay.GetMaximumSamplesPerPixel(newClip.samples, GetWidthOfWaveDisplayWindow());
+		displayState.samplesPerPixel = Mathf.Min(WaveDisplayState.s_DefaultSamplesPerPixel, maxSamplesPerPixel);
 	}
 
 	void PlayAudio(int sampleTime = -1)
@@ -2126,6 +2191,11 @@ public class KoreographyEditor : EditorWindow
 				controlMode = ControlMode.Author;
 				Event.current.Use();
 			}
+			else if (Event.current.keyCode == KeyCode.D && Event.current.type == EventType.KeyDown)
+			{
+				controlMode = ControlMode.Clone;
+				Event.current.Use();
+			}
 			else if (Event.current.keyCode == KeyCode.Z && Event.current.type == EventType.KeyDown)
 			{
 				bCreateOneOff = true;
@@ -2202,7 +2272,13 @@ public class KoreographyEditor : EditorWindow
 			bIsWaveDisplayFocused = false;
 
 			Vector2 mousePos = Event.current.mousePosition;
-			if (waveDisplay != null && waveDisplay.IsClickableAtLoc(mousePos))
+
+			if (IsPointInWaveScrollBar(mousePos))
+			{
+				// Don't lose focus when the scroll bar is clicked.
+				FocusWaveDisplayWindow();
+			}
+			else if (waveDisplay != null && waveDisplay.IsClickableAtLoc(mousePos))
 			{
 				FocusWaveDisplayWindow();
 
@@ -2212,6 +2288,8 @@ public class KoreographyEditor : EditorWindow
 				eventEditMode = EventEditMode.None;
 				eventEditClickX = 0;
 
+				// If we are clicking on an event, prefer to select/resize/move it.
+				//  Otherwise, check that we're in the correct mode.
 				if (clickEvt != null || controlMode == ControlMode.Select)
 				{
 					MouseDownEditMode();
@@ -2233,10 +2311,22 @@ public class KoreographyEditor : EditorWindow
 						}
 					}
 				}
-				else if (editKoreo != null && editTrack != null && buildEvent == null &&
-				         eventEditMode == EventEditMode.None)
+				else if (controlMode == ControlMode.Author)
 				{
 					MouseDownDrawMode();
+				}
+				else if (controlMode == ControlMode.Clone)
+				{
+					// Do the clone only if we have a selection.
+					//  If no selection, do selection.
+					if (selectedEvents.Count > 0)
+					{
+						MouseDownCloneMode();
+					}
+					else
+					{
+						MouseDownEditMode();
+					}
 				}
 			}
 			else if (IsPointInLCD(mousePos))
@@ -2257,9 +2347,20 @@ public class KoreographyEditor : EditorWindow
 			{
 				MouseUpEditMode();
 			}
-			else if (buildEvent != null)	// For this to be the case we must have valid Koreography and at least one KoreographyTrack.
+			else if (controlMode == ControlMode.Author)	// For this to be the case we must have valid Koreography and at least one KoreographyTrack.
 			{
 				MouseUpDrawMode();
+			}
+			else if (controlMode == ControlMode.Clone)
+			{
+				if (selectedEvents.Count > 0)
+				{
+					MouseUpCloneMode();
+				}
+				else
+				{
+					MouseUpEditMode();
+				}
 			}
 		}
 		else if (Event.current.type == EventType.MouseDrag && Event.current.button == 0)
@@ -2275,10 +2376,41 @@ public class KoreographyEditor : EditorWindow
 				{
 					MouseDragEditMode();
 				}
-				else if (buildEvent != null)	// For this to be the case we must have valid Koreography and at least one KoreographyTrack.
+				else if (controlMode == ControlMode.Author)
 				{
 					MouseDragDrawMode();
 				}
+				else if (controlMode == ControlMode.Clone)
+				{
+					if (selectedEvents.Count > 0)
+					{
+						MouseDragCloneMode();
+					}
+					else
+					{
+						MouseDragEditMode();
+					}
+				}
+			}
+		}
+	}
+	
+	void HandleScrollInput()
+	{
+		if (Event.current.type == EventType.scrollWheel)
+		{
+			if (waveDisplay != null &&
+			    waveDisplay.ContainsPoint(Event.current.mousePosition) &&
+			    Mathf.Abs(Event.current.delta.y) > Mathf.Abs(Event.current.delta.x))
+			{
+				// Vertical scroll over the wave display detected.  Do zoom!
+				int scrollFactor = 2;
+				
+				int zoomOffsetInPixels = waveDisplay.GetPixelOffsetInChannelAtLoc(Event.current.mousePosition);
+				
+				SetNewSamplesPerPixel(Mathf.Clamp(displayState.samplesPerPixel + ((int)Event.current.delta.y * scrollFactor), 1, maxSamplesPerPixel), zoomOffsetInPixels);
+				
+				Event.current.Use();
 			}
 		}
 	}
@@ -2296,34 +2428,40 @@ public class KoreographyEditor : EditorWindow
 		}
 		return bInLCD;
 	}
+	
+	bool IsPointInWaveScrollBar(Vector2 point)
+	{
+		// The scrollbar is the difference between the wave content and the full wave display rect.
+		return fullWaveContentRect.Contains(point) && !(waveDisplay != null && waveDisplay.IsClickableAtLoc(point));
+	}
+
+	bool ShouldEventEditSnapToBeat()
+	{
+		bool bSnap = bSnapTimingToBeat;
+		
+		if (Event.current != null)
+		{
+			if (bSnap)
+			{
+				bSnap = Event.current.shift ? false : true;
+			}
+			else
+			{
+				bSnap = Event.current.shift ? true : false;
+			}
+		}
+		
+		return bSnap;
+	}
 
 	string GetMusicTimeForDisplayFromSample(int sample)
 	{
 		float beat = editKoreo.GetBeatCountInMeasureFromSampleTime(sample) + 1f;
 		float measure = Mathf.Floor(editKoreo.GetMeasureTimeFromSampleTime(sample) + 1f);
 
-		// This appears to be necessary because of floating point rounding errors with sample
-		//  math precision (probably?).  May need to use a double to get this precisely correct.
-		//  Or some other math is entirely off...
-		{
-			TempoSectionDef curSection = editKoreo.GetTempoSectionForSample(sample);
-			float nextSampleBeat = Mathf.Floor(beat + (1f / curSection.SamplesPerBeat));
-			// Normally we don't care about this because rounding handles things.  However, when we're less than one
-			//  sample away from the next measure boundary we need to be super careful.  Currently rounding rules
-			//  work in such a way as to set the measure boundary to the sample that closest to the boundary, even if
-			//  that sample is *below* the measure boundary.  This should probably be changed such that the the *next*
-			//  sample after the between-sample measure boundary is used as the first measure sample, rather than the
-			//  'closest'.
-			if (nextSampleBeat > Mathf.Floor(beat) && nextSampleBeat > curSection.BeatsPerMeasure)
-			{
-				beat = 1f;
-				measure++;
-			}
-			
-			// Handle String format rounding rules.  This will ensure that we have a precision of
-			//  exactly 3 decimal positions, forestalling rounding.
-			beat = Mathf.Round(beat * 1000f) / 1000f;
-		}
+		// Handle String format rounding rules.  This will ensure that we have a precision of
+		//  exactly 3 decimal positions, forestalling rounding.
+		beat = Mathf.Round(beat * 1000f) / 1000f;
 
 		return string.Format("{0:0'm | '}", measure) +
 			   string.Format("{0:0.000'b'}", beat);
@@ -2336,26 +2474,6 @@ public class KoreographyEditor : EditorWindow
 		float maxX = Mathf.Max(dragStartPos.x, dragEndPos.x);
 		float maxY = Mathf.Max(dragStartPos.y, dragEndPos.y);
 		return Rect.MinMaxRect(minX, minY, maxX, maxY);
-	}
-
-	void HandleScrollInput()
-	{
-		if (Event.current.type == EventType.scrollWheel)
-		{
-			if (waveDisplay != null &&
-				waveDisplay.ContainsPoint(Event.current.mousePosition) &&
-				Mathf.Abs(Event.current.delta.y) > Mathf.Abs(Event.current.delta.x))
-			{
-				// Vertical scroll over the wave display detected.  Do zoom!
-				int scrollFactor = 2;
-
-				int zoomOffsetInPixels = waveDisplay.GetPixelOffsetInChannelAtLoc(Event.current.mousePosition);
-
-				SetNewSamplesPerPixel(Mathf.Clamp(displayState.samplesPerPixel + ((int)Event.current.delta.y * scrollFactor), 1, maxSamplesPerPixel), zoomOffsetInPixels);
-
-				Event.current.Use();
-			}
-		}
 	}
 		
 	void ValidateKoreographyAndTrackData()
@@ -2399,7 +2517,7 @@ public class KoreographyEditor : EditorWindow
 				edgeLoc.x -= eventEditClickX;
 				samplePos = waveDisplay.GetSamplePositionOfPoint(edgeLoc, displayState);
 
-				if (bSnapTimingToBeat)
+				if (ShouldEventEditSnapToBeat())
 				{
 					samplePos = editKoreo.GetSampleOfNearestBeat(samplePos, snapSubBeatCount);
 				}
@@ -2424,7 +2542,7 @@ public class KoreographyEditor : EditorWindow
 			{
 				samplePos = waveDisplay.GetSamplePositionOfPoint(mouseLoc, displayState);
 				
-				if (bSnapTimingToBeat)
+				if (ShouldEventEditSnapToBeat())
 				{
 					samplePos = editKoreo.GetSampleOfNearestBeat(samplePos, snapSubBeatCount);
 				}
@@ -2538,7 +2656,7 @@ public class KoreographyEditor : EditorWindow
 					// Only create OneOff events on Double click.
 					newEvt.EndSample = newEvt.StartSample;
 
-					if (bSnapTimingToBeat)
+					if (ShouldEventEditSnapToBeat())
 					{
 						newEvt.MoveTo(editKoreo.GetSampleOfNearestBeat(newEvt.StartSample, snapSubBeatCount));
 					}
@@ -2636,41 +2754,82 @@ public class KoreographyEditor : EditorWindow
 
 	void MouseDownDrawMode()
 	{
-		// Clear out the selected events in draw mode before drawing.
-		if (selectedEvents.Count > 0)
+		if (editKoreo != null && editTrack != null && buildEvent == null)
 		{
-			selectedEvents.Clear();
-		}
-		else
-		{
-			BeginNewEvent(waveDisplay.GetSamplePositionOfPoint(Event.current.mousePosition, displayState));
-		}
+			// Clear out the selected events in draw mode before drawing.
+			if (selectedEvents.Count > 0)
+			{
+				selectedEvents.Clear();
+			}
+			else
+			{
+				BeginNewEvent(waveDisplay.GetSamplePositionOfPoint(Event.current.mousePosition, displayState));
+			}
 
-		Event.current.Use();
-		Repaint();
+			Event.current.Use();
+			Repaint();
+		}
 	}
 
 	void MouseDragDrawMode()
 	{
-		ContinueNewEvent(waveDisplay.GetSamplePositionOfPoint(Event.current.mousePosition, displayState));
+		if (buildEvent != null)	// For this to be the case we must have valid Koreography and at least one KoreographyTrack.
+		{
+			ContinueNewEvent(waveDisplay.GetSamplePositionOfPoint(Event.current.mousePosition, displayState));
 
-		Event.current.Use();
-		Repaint();
+			Event.current.Use();
+			Repaint();
+		}
 	}
 
 	void MouseUpDrawMode()
 	{
-		int samplePos = buildEvent.EndSample;
-
-		if (waveDisplay.ContainsPoint(Event.current.mousePosition))
+		if (buildEvent != null)
 		{
-			samplePos = waveDisplay.GetSamplePositionOfPoint(Event.current.mousePosition, displayState);
+			int samplePos = buildEvent.EndSample;
+
+			if (waveDisplay.ContainsPoint(Event.current.mousePosition))
+			{
+				samplePos = waveDisplay.GetSamplePositionOfPoint(Event.current.mousePosition, displayState);
+			}
+
+			EndNewEvent(samplePos);
+
+			Event.current.Use();
+			Repaint();
 		}
+	}
 
-		EndNewEvent(samplePos);
+	void MouseDownCloneMode()
+	{
+		if (editKoreo != null && editTrack != null && buildEvent == null)
+		{
+			if (selectedEvents.Count > 0)
+			{
+				int samplePos = waveDisplay.GetSamplePositionOfPoint(Event.current.mousePosition, displayState);
 
-		Event.current.Use();
-		Repaint();
+				// Snap these to the beat if that's the setting (or override)
+				if (ShouldEventEditSnapToBeat())
+				{
+					samplePos = editKoreo.GetSampleOfNearestBeat(samplePos, snapSubBeatCount);
+				}
+
+				DuplicateEventsAtLocation(selectedEvents, samplePos, "Clone Event");
+			}
+
+			Event.current.Use();
+			Repaint();
+		}
+	}
+
+	void MouseDragCloneMode()
+	{
+		// Don't do anything yet.
+	}
+
+	void MouseUpCloneMode()
+	{
+		// Don't do anything yet.
 	}
 
 	#endregion
@@ -2773,20 +2932,35 @@ public class KoreographyEditor : EditorWindow
 	{
 		int samplePos = (int)samplePosAsObj;
 
-		clippedEvents.Sort(KoreographyEvent.CompareByStartSample);
-		
-		Undo.RecordObject(editTrack, clippedEvents.Count > 1 ? "Paste Events" : "Paste Event");
-		EditorUtility.SetDirty(editTrack);
-		
-		// Used for offsetting.
-		int startOffset = clippedEvents.First().StartSample;
-		
-		foreach (KoreographyEvent addEvt in clippedEvents)
-		{
-			KoreographyEvent newEvt = addEvt.GetCopy();
-			newEvt.MoveTo(samplePos + (addEvt.StartSample - startOffset));
+		DuplicateEventsAtLocation(clippedEvents, samplePos, "Paste Event");
+	}
 
-			editTrack.AddEvent(newEvt);
+	/// <summary>
+	/// Duplicates the events in the source list beginning at the specified location, recording
+	/// them as the operation for the Undo system.
+	/// </summary>
+	/// <param name="srcEvents">Events to duplicate.</param>
+	/// <param name="samplePos">The position to seed the duplication.</param>
+	/// <param name="operationSingle">The Operation to record this as, in single (made multiple internally).</param>
+	void DuplicateEventsAtLocation(List<KoreographyEvent> srcEvents, int samplePos, string operationSingle)
+	{
+		if (srcEvents.Count > 0)
+		{
+			srcEvents.Sort(KoreographyEvent.CompareByStartSample);
+			
+			Undo.RecordObject(editTrack, srcEvents.Count == 1 ? operationSingle : operationSingle + "s");
+			EditorUtility.SetDirty(editTrack);
+			
+			// Used for offsetting.
+			int startOffset = srcEvents.First().StartSample;
+			
+			foreach (KoreographyEvent addEvt in srcEvents)
+			{
+				KoreographyEvent newEvt = addEvt.GetCopy();
+				newEvt.MoveTo(samplePos + (addEvt.StartSample - startOffset));
+				
+				editTrack.AddEvent(newEvt);
+			}
 		}
 	}
 

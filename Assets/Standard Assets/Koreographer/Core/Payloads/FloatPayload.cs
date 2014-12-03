@@ -22,6 +22,31 @@ public partial class KoreographyTrack
 	#endregion
 }
 
+public static class FloatPayloadEventExtensions
+{
+	#region KoreographyEvent Extension Methods
+	
+	public static bool HasFloatPayload(this KoreographyEvent koreoEvent)
+	{
+		return (koreoEvent.Payload as FloatPayload) != null;
+	}
+	
+	public static float GetFloatValue(this KoreographyEvent koreoEvent)
+	{
+		float retVal = 0f;
+		
+		FloatPayload pl = koreoEvent.Payload as FloatPayload;
+		if (pl != null)
+		{
+			retVal = pl.FloatVal;
+		}
+		
+		return retVal;
+	}
+	
+	#endregion
+}
+
 [System.Serializable]
 public class FloatPayload : KoreographyPayload
 {

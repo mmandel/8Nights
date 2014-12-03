@@ -144,7 +144,7 @@ public class TempoSectionDef
 		
 		if (sampleTime >= startSample)
 		{
-			beatTime = (float)(sampleTime - startSample) / GetSamplesPerBeatSection(numSubBeats);
+			beatTime = (float)((decimal)(sampleTime - startSample) / (decimal)GetSamplesPerBeatSection(numSubBeats));
 		}
 		
 		return beatTime;
@@ -441,14 +441,16 @@ public class Koreography : ScriptableObject
 
 		// When converting measures to samples we must be careful to use the next sample that is fully inside the measure.
 		//  Rounding down could actually return us the last sample from the previous measure.
-		return targetSection.StartSample + Mathf.CeilToInt((float)measure * (float)targetSection.BeatsPerMeasure * targetSection.SamplesPerBeat);
+		return targetSection.StartSample + (int)System.Math.Ceiling((decimal)measure * (decimal)targetSection.BeatsPerMeasure * (decimal)targetSection.SamplesPerBeat);
 	}
 
 	public float GetBeatCountInMeasureFromSampleTime(int sampleTime)
 	{
 		TempoSectionDef destTempoSection = GetTempoSectionForSample(sampleTime);
 
-		return destTempoSection.GetBeatTimeFromSampleTime(sampleTime) % (float)destTempoSection.BeatsPerMeasure;
+		// Modulo is weird with floating point due to twos-complement and how decimals are stored, frequently resulting in a little
+		//  precision error.  The 128-bit decimal value is far more precise (and all calculations should be within range!).
+		return (float)((decimal)destTempoSection.GetBeatTimeFromSampleTime(sampleTime) % (decimal)destTempoSection.BeatsPerMeasure);
 	}
 
 	public float GetSamplesPerBeat(int checkSample, int subBeats = 0)
@@ -462,11 +464,11 @@ public class Koreography : ScriptableObject
 		// Find TempoSection this sample is within.
 		TempoSectionDef sampleSection = GetTempoSectionForSample(checkSample);
 
-		float samplesPerBeat = sampleSection.GetSamplesPerBeatSection(subBeats);
+		decimal samplesPerBeat = (decimal)sampleSection.GetSamplesPerBeatSection(subBeats);
 
-		int distFromStart = checkSample - sampleSection.StartSample;
+		decimal distFromStart = checkSample - sampleSection.StartSample;
 
-		return sampleSection.StartSample + (samplesPerBeat > 0 ? (int)(Mathf.Round((float)distFromStart / samplesPerBeat) * samplesPerBeat) : 0);
+		return sampleSection.StartSample + (samplesPerBeat > 0M ? (int)(System.Math.Round(distFromStart / samplesPerBeat) * samplesPerBeat) : 0);
 	}
 
 	public TempoSectionDef GetTempoSectionForSample(int checkSample)

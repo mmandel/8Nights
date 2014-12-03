@@ -18,11 +18,11 @@ public static class CustomAssetUtility
 		T asset = ScriptableObject.CreateInstance<T>();
 		
 		string path = AssetDatabase.GetAssetPath(Selection.activeObject);
-		if (path == "")
+		if (string.IsNullOrEmpty(path))
 		{
 			path = "Assets";
 		}
-		else if (Path.GetExtension(path) != "")
+		else if (!string.IsNullOrEmpty(Path.GetExtension(path)))
 		{
 			path = path.Replace(Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
 		}

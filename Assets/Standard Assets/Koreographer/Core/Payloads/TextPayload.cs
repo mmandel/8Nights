@@ -22,6 +22,31 @@ public partial class KoreographyTrack
 	#endregion
 }
 
+public static class TextPayloadEventExtensions
+{
+	#region KoreographyEvent Extension Methods
+	
+	public static bool HasTextPayload(this KoreographyEvent koreoEvent)
+	{
+		return (koreoEvent.Payload as TextPayload) != null;
+	}
+	
+	public static string GetTextValue(this KoreographyEvent koreoEvent)
+	{
+		string retVal = string.Empty;
+		
+		TextPayload pl = koreoEvent.Payload as TextPayload;
+		if (pl != null)
+		{
+			retVal = pl.TextVal;
+		}
+		
+		return retVal;
+	}
+	
+	#endregion
+}
+
 [System.Serializable]
 public class TextPayload : KoreographyPayload
 {

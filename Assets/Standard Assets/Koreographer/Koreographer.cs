@@ -39,6 +39,39 @@ class EventObj
 		timedEvent -= callback;
 	}
 
+	public void UnregisterByObject(System.Object obj)
+	{
+		System.Delegate[] delegates;
+
+		if (basicEvent != null)
+		{
+			delegates = basicEvent.GetInvocationList();
+
+			for (int i = 0; i < delegates.Length; ++i)
+			{
+				if (delegates[i].Target == obj)
+				{
+					basicEvent -= (KoreographyEventCallback)delegates[i];
+					break;
+				}
+			}
+		}
+
+		if (timedEvent != null)
+		{
+			delegates = timedEvent.GetInvocationList();
+
+			for (int i = 0; i < delegates.Length; ++i)
+			{
+				if (delegates[i].Target == obj)
+				{
+					timedEvent -= (KoreographyEventCallbackWithTime)delegates[i];
+					break;
+				}
+			}
+		}
+	}
+
 	public void ClearRegistrations()
 	{
 		basicEvent = null;
@@ -123,7 +156,7 @@ public class Koreographer : MonoBehaviour
 		{
 			foreach (KeyValuePair<string,EventObj> mapping in eventBoard)
 			{
-				// Tie the update to pre-existing event requests.
+				// Tie the Koreography to pre-existing event requests.
 				koreo.RegisterForEventsWithTime(mapping.Key, mapping.Value.Trigger);
 			}
 
@@ -139,6 +172,7 @@ public class Koreographer : MonoBehaviour
 			{
 				if(koreo.DoesTrackWithEventIDExist(mapping.Key))
 				{
+					// Untie the Koreography from existing event requests.
 					koreo.UnregisterForEventsWithTime(mapping.Key, mapping.Value.Trigger);
 				}
 			}
@@ -153,19 +187,20 @@ public class Koreographer : MonoBehaviour
 	}
 
 	#endregion
-	#region Event Callbacks
+	#region Event Callback Registration
 	
 	public void RegisterForEvents(string eventID, KoreographyEventCallback callback)
 	{
-		if (eventID == string.Empty)
+		if (string.IsNullOrEmpty(eventID))
 		{
 			Debug.LogError("Cannot register for events with an empty event identifier!");
 		}
 		else
 		{
 			KeyValuePair<string,EventObj> mapping = eventBoard.Find(x=>x.Key == eventID);
-			
-			if (mapping.Key != string.Empty)
+
+			// KeyValuePair generics treat the key as a property, which can return null.
+			if (string.IsNullOrEmpty(mapping.Key))
 			{
 				mapping = new KeyValuePair<string, EventObj>(eventID, new EventObj());
 				eventBoard.Add(mapping);
@@ -173,13 +208,7 @@ public class Koreographer : MonoBehaviour
 				// New Mapping (we haven't encountered this event ID before).  Register with previously
 				//  loaded Koreography!
 				// Adds the Koreographer->Koreography link.
-				foreach (Koreography koreo in loadedKoreography)
-				{
-					if (koreo.DoesTrackWithEventIDExist(eventID))
-					{
-						koreo.RegisterForEventsWithTime(eventID, mapping.Value.Trigger);
-					}
-				}
+				ConnectEventToLoadedKoreography(mapping);
 			}
 			
 			// Add the Obj->Koreographer link.
@@ -189,15 +218,16 @@ public class Koreographer : MonoBehaviour
 	
 	public void RegisterForEventsWithTime(string eventID, KoreographyEventCallbackWithTime callback)
 	{
-		if (eventID == string.Empty)
+		if (string.IsNullOrEmpty(eventID))
 		{
 			Debug.LogError("Cannot register for events with an empty event identifier!");
 		}
 		else
 		{
 			KeyValuePair<string,EventObj> mapping = eventBoard.Find(x=>x.Key == eventID);
-			
-			if (mapping.Key != string.Empty)
+
+			// KeyValuePair generics treat the key as a property, which can return null.
+			if (string.IsNullOrEmpty(mapping.Key))
 			{
 				mapping = new KeyValuePair<string, EventObj>(eventID, new EventObj());
 				eventBoard.Add(mapping);
@@ -205,13 +235,7 @@ public class Koreographer : MonoBehaviour
 				// New Mapping (we haven't encountered this event ID before).  Register with previously
 				//  loaded Koreography!
 				// Adds the Koreographer->Koreography link.
-				foreach (Koreography koreo in loadedKoreography)
-				{
-					if (koreo.DoesTrackWithEventIDExist(eventID))
-					{
-						koreo.RegisterForEventsWithTime(eventID, mapping.Value.Trigger);
-					}
-				}
+				ConnectEventToLoadedKoreography(mapping);
 			}
 			
 			// Add the Obj->Koreographer link.
@@ -221,15 +245,16 @@ public class Koreographer : MonoBehaviour
 	
 	public void UnregisterForEvents(string eventID, KoreographyEventCallback callback)
 	{
-		if (eventID == string.Empty)
+		if (string.IsNullOrEmpty(eventID))
 		{
 			Debug.LogError("Cannot unregister for events with an empty event identifier!");
 		}
 		else
 		{
 			KeyValuePair<string,EventObj> mapping = eventBoard.Find(x=>x.Key == eventID);
-			
-			if (mapping.Key != string.Empty)
+
+			// KeyValuePair generics treat the key as a property, which can return null.
+			if (!string.IsNullOrEmpty(mapping.Key))
 			{
 				// Remove the Obj->Koreographer link.
 				mapping.Value.Unregister(callback);
@@ -239,13 +264,7 @@ public class Koreographer : MonoBehaviour
 					// If there isn't a reason for this to exist anymore, clean it up!
 					
 					// Remove the Koreographer->Koreography link.
-					foreach (Koreography koreo in loadedKoreography)
-					{
-						if (koreo.DoesTrackWithEventIDExist(mapping.Key))
-						{
-							koreo.UnregisterForEventsWithTime(mapping.Key, mapping.Value.Trigger);
-						}
-					}
+					DisconnectEventFromLoadedKoreography(mapping);
 					
 					eventBoard.Remove(mapping);
 				}
@@ -255,15 +274,16 @@ public class Koreographer : MonoBehaviour
 	
 	public void UnregisterForEvents(string eventID, KoreographyEventCallbackWithTime callback)
 	{
-		if (eventID == string.Empty)
+		if (string.IsNullOrEmpty(eventID))
 		{
 			Debug.LogError("Cannot unregister for events with an empty event identifier!");
 		}
 		else
 		{
 			KeyValuePair<string,EventObj> mapping = eventBoard.Find(x=>x.Key == eventID);
-			
-			if (mapping.Key != string.Empty)
+
+			// KeyValuePair generics treat the key as a property, which can return null.
+			if (!string.IsNullOrEmpty(mapping.Key))
 			{
 				// Remove the Obj->Koreographer link.
 				mapping.Value.Unregister(callback);
@@ -273,16 +293,31 @@ public class Koreographer : MonoBehaviour
 					// If there isn't a reason for this to exist anymore, clean it up!
 					
 					// Remove the Koreographer->Koreography link.
-					foreach (Koreography koreo in loadedKoreography)
-					{
-						if (koreo.DoesTrackWithEventIDExist(mapping.Key))
-						{
-							koreo.UnregisterForEventsWithTime(mapping.Key, mapping.Value.Trigger);
-						}
-					}
-					
+					DisconnectEventFromLoadedKoreography(mapping);
+
 					eventBoard.Remove(mapping);
 				}
+			}
+		}
+	}
+
+	public void UnregisterForAllEvents(System.Object obj)
+	{
+		// Go backwards as this loop may shrink the eventBoard list.
+		for (int i = eventBoard.Count - 1; i >= 0; --i)
+		{
+			KeyValuePair<string,EventObj> mapping = eventBoard[i];
+
+			mapping.Value.UnregisterByObject(obj);
+
+			if (mapping.Value.IsClear())
+			{
+				// If there isn't a reason for this to exist anymore, clean it up!
+
+				// Remove the Koreographer->Koreography link.
+				DisconnectEventFromLoadedKoreography(mapping);
+
+				eventBoard.Remove(mapping);
 			}
 		}
 	}
@@ -291,21 +326,39 @@ public class Koreographer : MonoBehaviour
 	{
 		foreach (KeyValuePair<string,EventObj> mapping in eventBoard)
 		{
-			// Remove Koreographer->Koreography links.
-			foreach (Koreography koreo in loadedKoreography)
-			{
-				if (koreo.DoesTrackWithEventIDExist(mapping.Key))
-				{
-					koreo.UnregisterForEventsWithTime(mapping.Key, mapping.Value.Trigger);
-				}
-			}
-
 			// Remove Obj->Koreographer links.
 			mapping.Value.ClearRegistrations();
+
+			// Remove the Koreographer->Koreography link.
+			DisconnectEventFromLoadedKoreography(mapping);
 		}
 		
 		// Releases all mappings.
 		eventBoard.Clear();
+	}
+
+	void ConnectEventToLoadedKoreography(KeyValuePair<string,EventObj> mapping)
+	{
+		// Adds the Koreographer->Koreography link.
+		foreach (Koreography koreo in loadedKoreography)
+		{
+			if (koreo.DoesTrackWithEventIDExist(mapping.Key))
+			{
+				koreo.RegisterForEventsWithTime(mapping.Key, mapping.Value.Trigger);
+			}
+		}
+	}
+
+	void DisconnectEventFromLoadedKoreography(KeyValuePair<string,EventObj> mapping)
+	{
+		// Remove Koreographer->Koreography links.
+		foreach (Koreography koreo in loadedKoreography)
+		{
+			if (koreo.DoesTrackWithEventIDExist(mapping.Key))
+			{
+				koreo.UnregisterForEventsWithTime(mapping.Key, mapping.Value.Trigger);
+			}
+		}
 	}
 	
 	#endregion

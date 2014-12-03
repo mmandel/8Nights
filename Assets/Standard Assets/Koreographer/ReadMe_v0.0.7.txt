@@ -1,7 +1,7 @@
 ----------------------------------------------
             Koreographer™
  Copyright © 2014 Sonic Bloom, LLC
-            Version 0.0.8
+            Version 0.0.9
 ----------------------------------------------
 
 Thank you for downloading Koreographer™!
@@ -86,6 +86,30 @@ General Provisions
 -----------------
  Version History
 -----------------
+
+0.0.9 Developer Preview - Fifth Release!
+- NEW: Clone Tool support!  This mode, enabled by pressing the “d” key or clicking the “Clone” button above the Waveform Display, enables fast duplication of a selection of events.  Here’s how it works:
+  - If a selection doesn’t yet exist, the mouse will act exactly as it does in “Select” mode, allowing you to select events.
+  - If a selection exists when the mouse is pressed, those events will be duplicated (cloned) and added to the Koreography Track at the current mouse position.  This operation adheres to Snap to Beat settings.
+- NEW: The WaveDisplay now maintains focus after the user scrolls via the scrollbar.
+- NEW: The “Snap to Beat” setting can be temporarily inverted by holding down the Shift key for most interactions.
+- NEW: Pressing the Escape key while the Waveform Display has focus will clear the active selection of events.
+- NEW: Type-specific Payload accessors directly off of KoreographyEvent object instances!  Accessors currently include:
+  - CurvePayload: HasCurvePayload(), GetCurveValue(), GetValueOfCurveAtTime()
+  - FloatPayload: HasFloatPayload(), GetFloatValue()
+  - TextPayload: HasTextPayload(), GetTextValue()
+- NEW: Added an UnregisterForAllEvents() convenience function to the Koreographer class that unregisters for all possible EventIDs.  Useful for objects that have lots of potential Event ID Registrations.
+- NEW: Pulled the update logic out of SimpleMusicPlayer into a new class called AudioVisor with an extremely simple API.  This makes custom Music Player creation much easier and provides the foundation for future players (multi-layer, FMOD, WWise, etc.).
+- FIX: Actually break the publisher-subscriber link when unregistering events with the Koreographer.  This stops a whole bunch of memory from leaking/sitting around until the Koreographer was cleaned up!
+- FIX: Don’t globally swallow Cut/Copy/Paste/SelectAll commands to allow all fields proper chances to respond.
+- FIX: More reasonable default zoom level on Audio/Koreography load.
+- FIX: In the SimplePlayer component, properly handle updating the sample time when changing the playing clip.
+- FIX: Major overhaul of SimplePlayer component timing system.  Should improve reliability and remove bugs, particularly in high frame-rate scenarios.
+- FIX: Restored compatibility with latest Unity 5ß (up to date as of 5b14).
+- FIX: Removed use of AudiClip.isReadyToPlay flag that was deprecated in Unity 5b13.
+- FIX: The Koreography Editor window can once again be flexibly resized down to a default size of 100x100px.  It will now only be resized on first-launch.  A new file “KoreographerSettings” will appear in the <ProjectDirectory>/Library folder.  This is currently only used to determine if the Koreography Editor has been opened in this project before or not.
+- FIX: Handled a Null Reference exception that would occur when trying to draw/drag a span event with click position sufficiently close to left edge of the WaveForm display.
+- FIX: Small precision enhancements to work around internal floating point errors.  Many internal calculations now occur with the 128-bit Decimal value type.
 
 0.0.8 Developer Preview - Fourth Release!
 - NEW: Faster Waveform rendering thanks to using Unity's built-in line renderer over the custom community created one.

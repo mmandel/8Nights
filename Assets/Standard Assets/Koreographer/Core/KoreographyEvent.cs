@@ -151,13 +151,15 @@ public class KoreographyEvent
 			retVal = 0f;
 		}
 		else if (sampleTime > EndSample ||	// Check that we're beyond the end.
-		         IsOneOff())			// Logic order is important here(?), enabling this check!
+		         IsOneOff())				// Logic order is important here(?), enabling this check!
 		{
 			retVal = 1f;
 		}
 		else
 		{
-			retVal = (float)(sampleTime - StartSample) / (float)(EndSample - StartSample);
+			// We don't use Mathf.InverseLerp here because we want to handle the OneOff case as above.
+			//  When 'to' and 'from' in InverseLerp are equal, it always returns 0.
+			retVal = (float)((decimal)(sampleTime - StartSample) / (decimal)(EndSample - StartSample));
 		}
 
 		return retVal;
