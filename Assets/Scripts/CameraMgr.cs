@@ -39,7 +39,7 @@ public class CameraMgr : MonoBehaviour
       return _riftCamActivated ? RiftCamLeft.transform : NormalCamera.transform;
    }
 
-   void ActivateRiftCam(bool b)
+   public void ActivateRiftCam(bool b)
    {
       _riftCamActivated = b;
 
