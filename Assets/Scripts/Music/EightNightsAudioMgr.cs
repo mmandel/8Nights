@@ -573,8 +573,13 @@ public class EightNightsAudioMgr : MonoBehaviour
          ShowTestUI = !ShowTestUI;
       }
 
+      //kill rift sounds
       if (Input.GetKeyDown(KeyCode.P))
          ResetAllStems(false, true);
+
+      //kill all sounds
+      if (Input.GetKeyDown(KeyCode.O))
+         ResetAllStems(false, false);
 
       if (Input.GetKeyDown(KeyCode.KeypadPlus))
          BeatClock.Instance.LatencyMs += 1000;
