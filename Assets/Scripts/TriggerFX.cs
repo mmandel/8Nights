@@ -23,6 +23,8 @@ public class TriggerFX : MonoBehaviour
 
    [Header("Play Animation")]
    public bool EnablePlayAnimation = false;
+   [HideInInspector]
+   public GameObject ObjWithAnimator = null;
    [AnimatorLayer]
    public int AnimatorLayer;
    [AnimatorState("AnimatorLayer")]
@@ -45,7 +47,7 @@ public class TriggerFX : MonoBehaviour
 
 	void Start () 
    {
-      _animator = gameObject.GetComponent<Animator>();
+      _animator = (ObjWithAnimator != null) ? ObjWithAnimator.GetComponent<Animator>() : this.gameObject.GetComponent<Animator>();
 
       //subscribe to the relevant events
       if (EightNightsMgr.Instance != null)

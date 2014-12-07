@@ -169,6 +169,7 @@ public class HueMessenger : MonoBehaviour
                        " \"sat\": " + (int)(hsbColor.s * 255.0f) +
                        " \"bri\": " + (int)(hsbColor.b * fade * 255.0f) +
                        " \"transitiontime\": " + transitionTime +
+                       //" \"effect\":\"colorloop\"" +
                        "}";
          string url = "http://" + BridgeIP + apiCall;
          //Debug.Log("URL: " + url + " body: " + body + " at Time: " + Time.time + " deltaSinceLastUpdate: " + l.TimeSinceLastUpdate() + "\n");
@@ -213,7 +214,12 @@ public class HueMessenger : MonoBehaviour
                     " \"sat\": " + (int)(hsbColor.s * 255.0f) +
                     " \"bri\": " + (int)(hsbColor.b * fade * 255.0f) +
                     " \"transitiontime\": " + transitionTime +
+                     //" \"effect\":\"colorloop\"" +
                     "}";
+     /* on = true;
+      string body = "{\"on\": " + (on ? "true" : "false") +
+                    " \"effect\":\"colorloop\"" +
+                    "}";*/
       string url = "http://" + BridgeIP + apiCall;
       //Debug.Log("URL: " + url + " body: " + body + " at Time: " + Time.time + " deltaSinceLastUpdate: " + l.TimeSinceLastUpdate() + "\n");      
       HTTP.Request request = new HTTP.Request("put", "http://" + BridgeIP + apiCall, JSON.JsonDecode(body) as Hashtable);

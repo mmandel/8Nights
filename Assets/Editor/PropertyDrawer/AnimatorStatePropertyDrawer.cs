@@ -24,8 +24,7 @@ public class AnimatorStateProperyDrawer : PropertyDrawer
 
       //get the layer num from the property name passed through the attribute
       int layerNum = prop.serializedObject.FindProperty(stateAttribute.LayerPropName).intValue;
-
-      GameObject go = (prop != null && prop.serializedObject != null) ? (prop.serializedObject.targetObject as Component).gameObject : null;;
+      GameObject go = (prop != null && prop.serializedObject != null) ? (prop.serializedObject.targetObject as Component).gameObject : null;
       if (go != null)
       {
          Animator a = go.GetComponent<Animator>();

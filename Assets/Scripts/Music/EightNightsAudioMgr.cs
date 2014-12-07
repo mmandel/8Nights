@@ -219,10 +219,13 @@ public class EightNightsAudioMgr : MonoBehaviour
    }
 
 
-   void ResetAllStems(bool instant = false)
+   void ResetAllStems(bool instant = false, bool RiftOnly = false)
    {
       foreach (GroupStateData g in _groupState)
       {
+         if (RiftOnly && !g.Group.ToString().Contains("Rift"))
+            continue;
+
          if (instant)
          {
             g.LoopState = StemLoopState.Off;
@@ -569,6 +572,9 @@ public class EightNightsAudioMgr : MonoBehaviour
       {
          ShowTestUI = !ShowTestUI;
       }
+
+      if (Input.GetKeyDown(KeyCode.P))
+         ResetAllStems(false, true);
 
       if (Input.GetKeyDown(KeyCode.KeypadPlus))
          BeatClock.Instance.LatencyMs += 1000;
