@@ -39,7 +39,15 @@ public class GroupTransformationFX : MonoBehaviour
 
       float u = 0.0f;
       if (isCrescendoing)
-         u = crescendoProgress;
+      {
+         /*if (_lastU > crescendoProgress)
+         {
+            u = _lastU - (2.0f * Time.deltaTime);
+            u = Mathf.Clamp01(u);
+         }
+         else*/
+            u = crescendoProgress;
+      }
       else
       {
          /*if (trackVolume > 0.0f)
@@ -52,6 +60,20 @@ public class GroupTransformationFX : MonoBehaviour
             u = 0.0f;
          else
             u = 1.0f;
+      }
+
+      if (Mathf.Abs(_lastU - u) > .05f)
+      {
+         if (u > _lastU)
+         {
+            u = _lastU + (2.0f * Time.deltaTime);
+         }
+         else if (u < _lastU)
+         {
+            u = _lastU - (2.0f * Time.deltaTime);
+         }
+
+         u = Mathf.Clamp01(u);
       }
 
       _animator.Play(StateToScrub, AnimatorLayer, u);
