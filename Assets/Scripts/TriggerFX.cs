@@ -8,23 +8,21 @@ using System.Collections;
 public class TriggerFX : MonoBehaviour 
 {
    [Header("Trigger Condition")]
-   public TriggerEvents TriggerEvent = TriggerEvents.ButtonPress;
+   public TriggerEvents TriggerEvent = TriggerEvents.NoteOnLight;
    public EightNightsMgr.GroupID Group;
    public EightNightsMgr.LightID Light;
 
-   [Header("Emit Particles")]
+   /*[Header("Emit Particles")]
    public bool EnableParticleEmit = false;
-   public ParticleSystem ParticleSys = null;
-   public int NumParticlesToEmit = 100;
+   public ParticleSystem[] ParticleSys = new ParticleSystem[0];
+   public int NumParticlesToEmit = 100;*/
 
    [Header("Play Particle Effect")]
    public bool EnablePlayParticleEffect = false;
-   public ParticleSystem PlayParticleSys = null; 
+   public ParticleSystem[] PlayParticleSys = new ParticleSystem[0]; 
 
    [Header("Play Animation")]
    public bool EnablePlayAnimation = false;
-   [HideInInspector]
-   public GameObject ObjWithAnimator = null;
    [AnimatorLayer]
    public int AnimatorLayer;
    [AnimatorState("AnimatorLayer")]
@@ -32,9 +30,9 @@ public class TriggerFX : MonoBehaviour
    public float TimeToAnimate = 1.0f;
 
 
-   [Header("Animator Trigger")]
+   /*[Header("Animator Trigger")]
    public bool EnableAnimatorTrigger = false;
-   public string AnimatorTriggerName = "";
+   public string AnimatorTriggerName = "";*/
 
    public enum TriggerEvents
    {
@@ -47,7 +45,7 @@ public class TriggerFX : MonoBehaviour
 
 	void Start () 
    {
-      _animator = (ObjWithAnimator != null) ? ObjWithAnimator.GetComponent<Animator>() : this.gameObject.GetComponent<Animator>();
+      _animator = this.gameObject.GetComponent<Animator>();
 
       //subscribe to the relevant events
       if (EightNightsMgr.Instance != null)
@@ -86,16 +84,23 @@ public class TriggerFX : MonoBehaviour
 
    void Trigger()
    {
-      if (EnableParticleEmit)
+      /*if (EnableParticleEmit)
       {
-         if (ParticleSys != null)
-            ParticleSys.Emit(NumParticlesToEmit);
-      }
+
+         foreach (ParticleSystem s in ParticleSys)
+         {
+            if (s != null)
+               s.Emit(NumParticlesToEmit);
+         }
+      }*/
 
       if (EnablePlayParticleEffect)
       {
-         if (PlayParticleSys != null)
-            PlayParticleSys.Play();
+         foreach (ParticleSystem s in PlayParticleSys)
+         {
+            if (s != null)
+               s.Play();
+         }
       }
 
       if (EnablePlayAnimation)
@@ -103,11 +108,11 @@ public class TriggerFX : MonoBehaviour
          _animationStartTime = Time.time;
       }
 
-      if (EnableAnimatorTrigger)
+      /*if (EnableAnimatorTrigger)
       {
          if (_animator != null)
             _animator.SetTrigger(AnimatorTriggerName);
-      }
+      }*/
    }
 	
 	void Update ()
