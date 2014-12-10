@@ -58,6 +58,8 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
    int curMusicTime = -1;
    int transMusicTime = 0;
 
+   bool _firstUpdate = true;
+
    // This is necessary to store transition info in case we're told to do something like:
    //  MusicPlayer.PlayMusic();
    //  MusicPlayer.ScheduleMusic();
@@ -178,13 +180,7 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
 
    void Start()
    {
-      //		bus.Init(audioCom, playbackMusic.Channels, playbackMusic.Frequency);		// CAN'T DO THIS!  Need to Init the AudioGroup before the Properties will work.
-      bus.Init(audioCom, musicChannels, musicFrequency);
-
-      if (playbackMusic != null && !playbackMusic.IsEmpty())
-      {
-         PlayMusic(playbackMusic);
-      }
+      _firstUpdate = true;
    }
 
    void OnDisable()
@@ -202,6 +198,18 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
 
    void Update()
    {
+      if (_firstUpdate)
+      {
+         //		bus.Init(audioCom, playbackMusic.Channels, playbackMusic.Frequency);		// CAN'T DO THIS!  Need to Init the AudioGroup before the Properties will work.
+         bus.Init(audioCom, musicChannels, musicFrequency);
+
+         if (playbackMusic != null && !playbackMusic.IsEmpty())
+         {
+            PlayMusic(playbackMusic);
+         }
+         _firstUpdate = false;
+      }
+
       //  Use the times to update the Koreographer.  Be sure to also notify it of looping/audio transitions.
       if (curMusic != null && bus.IsAudioPlaying(curMusic) && !bus.IsPaused())
       {
