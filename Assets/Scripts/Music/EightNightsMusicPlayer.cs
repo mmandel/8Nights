@@ -9,6 +9,7 @@
 //----------------------------------------------
 
 using UnityEngine;
+using System.Collections;
 
 // TODO: Convert the AudioBus *AND* this class into ones that support a queue of files to playback from.  This would make transitions
 //  far easier to handle.
@@ -196,17 +197,31 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
       }
    }
 
+   IEnumerator DelayedStart()
+   {
+      yield return new WaitForSeconds(3.0f);
+
+      //		bus.Init(audioCom, playbackMusic.Channels, playbackMusic.Frequency);		// CAN'T DO THIS!  Need to Init the AudioGroup before the Properties will work.
+      bus.Init(audioCom, musicChannels, musicFrequency);
+
+      if (playbackMusic != null && !playbackMusic.IsEmpty())
+      {
+         PlayMusic(playbackMusic);
+      }
+   }
+
    void Update()
    {
       if (_firstUpdate)
       {
          //		bus.Init(audioCom, playbackMusic.Channels, playbackMusic.Frequency);		// CAN'T DO THIS!  Need to Init the AudioGroup before the Properties will work.
-         bus.Init(audioCom, musicChannels, musicFrequency);
+         /*bus.Init(audioCom, musicChannels, musicFrequency);
 
          if (playbackMusic != null && !playbackMusic.IsEmpty())
          {
             PlayMusic(playbackMusic);
-         }
+         }*/
+         StartCoroutine(DelayedStart());
          _firstUpdate = false;
       }
 

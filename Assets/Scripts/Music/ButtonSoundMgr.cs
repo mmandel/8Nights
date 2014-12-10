@@ -35,6 +35,8 @@ public class ButtonSoundMgr : MonoBehaviour
       public SimpleMusicPlayer MusicPlayer;
       public bool AlignToDownBeat = false;
       public float DownBeatMoment = 1.5f;
+      [Range(0.0f, 1.0f)]
+      public float MaxVolume = 1.0f;
 
       float BeatsToSecs(float beats)
       {
@@ -126,7 +128,7 @@ public class ButtonSoundMgr : MonoBehaviour
             float prevProgress = _crescendoProgress;
             _crescendoProgress = Mathf.InverseLerp(_scheduleStartTime, _scheduleEndTime, curTime);
 
-            MusicPlayer.audio.volume = ButtonSoundMgr.Instance.MasterFader * GetCrescendoFade();
+            MusicPlayer.audio.volume = ButtonSoundMgr.Instance.MasterFader * GetCrescendoFade() * MaxVolume;
 
             //done? then send out event
             if (!Mathf.Approximately(prevProgress, 1.0f) && Mathf.Approximately(_crescendoProgress, 1.0f))
