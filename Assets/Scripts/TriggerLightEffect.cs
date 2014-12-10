@@ -12,6 +12,8 @@ public class TriggerLightEffect : MonoBehaviour
 
    public TriggerMode TriggerRule = TriggerMode.Sequential; //how do we pick an effect to trigger?
 
+   public bool ApplyNoteVelocity = false; //scale effect intensity with note velocity
+
    public EffectEntry ButtonEffect = null;
 
    public EffectEntry[] EffectsToTrigger = new EffectEntry[1]; //the actual effects
@@ -63,6 +65,7 @@ public class TriggerLightEffect : MonoBehaviour
                }
             }
             spawnedLightEffect.LightGroup = parentEffect.MIDIGroup;
+            spawnedLightEffect.MasterFader = parentEffect.ApplyNoteVelocity ? midiEvent.Velocity : 1.0f;
             spawnedLightEffect.AutoTrigger = true;            
             spawnedLightEffect.TriggerEffect(); //redundant, I know
             if (forceLooping)
@@ -82,6 +85,8 @@ public class TriggerLightEffect : MonoBehaviour
                spawnedLightEffect.FadeWithButtonCrescendo = false;
                spawnedLightEffect.AutoDestroy = true;
                _spawnedObj = null;
+
+               //Debug.Log("Note " + midiEvent.MidiNote + " velocity: " + midiEvent.Velocity);
 
                //send out event that we're triggering an effect on a particular light
                if ((EightNightsMgr.Instance != null) && (midiEvent != null))

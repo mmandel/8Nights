@@ -17,11 +17,12 @@ public class EightNightsMIDIMgr : MonoBehaviour
 
    public class EightNightsMIDIEventArgs : EventArgs
    {
-      public EightNightsMIDIEventArgs(int midiNote, float beat, float durationBeats, EightNightsMgr.GroupID g) { Group = g; MidiNote = midiNote; NoteBeat = beat; DurationBeats = durationBeats; }
+      public EightNightsMIDIEventArgs(int midiNote, float beat, float durationBeats, float velocity, EightNightsMgr.GroupID g) { Group = g; MidiNote = midiNote; NoteBeat = beat; DurationBeats = durationBeats; Velocity = velocity; }
       public EightNightsMgr.GroupID Group;
       public int MidiNote;
       public float NoteBeat = 0.0f;
       public float DurationBeats = 0.0f;
+      public float Velocity = 1.0f;
    }
    public delegate void EightNightsMIDIHandler(object sender, EightNightsMIDIEventArgs e);
 
@@ -87,7 +88,7 @@ public class EightNightsMIDIMgr : MonoBehaviour
          //Debug.Log("NOTE ON " + e.MidiNote + " for Group: " + c.Group.ToString() + " Beat: " + e.NoteBeat + " curBeat: " + BeatClock.Instance.elapsedBeats + " curSecs: " + BeatClock.Instance.elapsedSecs);
          if (OnNoteOn != null)
          {
-            OnNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, c.Group));
+            OnNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, e.Velocity, c.Group));
          }
       }
    }
@@ -100,7 +101,7 @@ public class EightNightsMIDIMgr : MonoBehaviour
          //Debug.Log("HUE NOTE ON " + e.MidiNote + " for Group: " + c.Group.ToString() + " Beat: " + e.NoteBeat + " curBeat: " + BeatClock.Instance.elapsedBeats + " curSecs: " + BeatClock.Instance.elapsedSecs);
          if (OnHueNoteOn != null)
          {
-            OnHueNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, c.Group));
+            OnHueNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, e.Velocity, c.Group));
          }
       }
    }
@@ -113,7 +114,7 @@ public class EightNightsMIDIMgr : MonoBehaviour
          //Debug.Log("LightJams NOTE ON " + e.MidiNote + " for Group: " + c.Group.ToString() + " Beat: " + e.NoteBeat + " curBeat: " + BeatClock.Instance.elapsedBeats + " curSecs: " + BeatClock.Instance.elapsedSecs);
          if (OnLightJamsNoteOn != null)
          {
-            OnLightJamsNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, c.Group));
+            OnLightJamsNoteOn(this, new EightNightsMIDIEventArgs(e.MidiNote, e.NoteBeat, e.DurationBeats, e.Velocity, c.Group));
          }
       }
    }

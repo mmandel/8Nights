@@ -17,8 +17,9 @@ public class MIDIReceiver : MonoBehaviour
    public event MIDIHandler OnNoteOn; 
    public class MIDIReceiverEventArgs : EventArgs
    {
-      public MIDIReceiverEventArgs(MIDIReceiver r, int midiNote, float beat, float durationBeats) { Receiver = r; MidiNote = midiNote; NoteBeat = beat; DurationBeats = durationBeats; }
+      public MIDIReceiverEventArgs(MIDIReceiver r, int midiNote, float beat, float durationBeats, float velocity) { Receiver = r; MidiNote = midiNote; NoteBeat = beat; DurationBeats = durationBeats; Velocity = velocity; }
       public int MidiNote;
+      public float Velocity = 1.0f;
       public float NoteBeat = 0.0f;
       public float DurationBeats = 0.0f;
       public MIDIReceiver Receiver = null;
@@ -36,6 +37,7 @@ public class MIDIReceiver : MonoBehaviour
       public int NoteNumber;
       public float NoteOnBeat;
       public float DurationBeats;
+      public float Velocity = 1.0f;
    }
 
    class PrerollSubscriber
@@ -121,6 +123,7 @@ public class MIDIReceiver : MonoBehaviour
                newNote.NoteNumber = noteEvent.NoteNumber;
                newNote.NoteOnBeat = MIDITimeMult*((float)noteEvent.AbsoluteTime / (float)mid.DeltaTicksPerQuarterNote);
                newNote.DurationBeats = MIDITimeMult*((float)noteEvent.NoteLength / (float)mid.DeltaTicksPerQuarterNote);
+               newNote.Velocity = noteEvent.Velocity / 127.0f;
                _noteOns.Add(newNote);
 
                //Debug.Log("  imported midi Note " + noteEvent.NoteNumber + " at beat " + newNote.NoteOnBeat + " duration " + newNote.DurationBeats);
@@ -147,7 +150,7 @@ public class MIDIReceiver : MonoBehaviour
          {
             //Debug.Log("NOTE ON: " + info.NoteNumber);
             if (OnNoteOn != null)
-               OnNoteOn(this, new MIDIReceiverEventArgs(this, info.NoteNumber, info.NoteOnBeat, info.DurationBeats));
+               OnNoteOn(this, new MIDIReceiverEventArgs(this, info.NoteNumber, info.NoteOnBeat, info.DurationBeats, info.Velocity));
          }
 
          //do preroll subscribers
@@ -156,7 +159,7 @@ public class MIDIReceiver : MonoBehaviour
             float prerolledBeat = info.NoteOnBeat - s.Preroll();
             if ((prerolledBeat > _prevBeat) && (prerolledBeat <= curBeat))
             {
-               s.DoCallback(new MIDIReceiverEventArgs(this, info.NoteNumber, info.NoteOnBeat, info.DurationBeats));
+               s.DoCallback(new MIDIReceiverEventArgs(this, info.NoteNumber, info.NoteOnBeat, info.DurationBeats, info.Velocity));
             }
          }
       }
