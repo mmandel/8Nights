@@ -24,7 +24,7 @@ public class ScrubFX : MonoBehaviour
    public bool EnableAnimCycle = false;
    [AnimatorLayer]
    public int CycleLayer;
-   [AnimatorState("ScrubLayer")]
+   [AnimatorState("CycleLayer")]
    public string CycleState;
    public float CycleSpeedMin = 0.0f;
    public float CycleSpeedMax = 1.0f;
