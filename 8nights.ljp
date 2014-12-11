@@ -182,6 +182,138 @@
               <position>16</position>
               <group>Dimmer</group>
             </fixture>
+            <fixture>
+              <id>Q</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>16</dmxAddress>
+              <position>17</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>R</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>17</dmxAddress>
+              <position>18</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>S</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>18</dmxAddress>
+              <position>19</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>T</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>19</dmxAddress>
+              <position>20</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>U</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>20</dmxAddress>
+              <position>21</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>V</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>21</dmxAddress>
+              <position>22</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>W</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>22</dmxAddress>
+              <position>23</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>X</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>23</dmxAddress>
+              <position>24</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>Y</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>24</dmxAddress>
+              <position>25</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>Z</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>25</dmxAddress>
+              <position>26</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>BA</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>26</dmxAddress>
+              <position>27</position>
+              <group>Dimmer</group>
+            </fixture>
+            <fixture>
+              <id>BB</id>
+              <manufacturer>Generic</manufacturer>
+              <name>Dimmer</name>
+              <templateId>34ac5e5a-a771-4b2e-9e2b-8cb835024b20</templateId>
+              <mode>55e4a7f7-c35e-483a-b79a-6a98f2b33ad8</mode>
+              <modeName>8 bits</modeName>
+              <dmxAddress>27</dmxAddress>
+              <position>28</position>
+              <group>Dimmer</group>
+            </fixture>
           </fixtures>
         </universe>
       </universes>
@@ -1289,8 +1421,8 @@
                   </emitter>
                   <emitter>
                     <direction>255</direction>
-                    <x>7</x>
-                    <y>13</y>
+                    <x>6</x>
+                    <y>11</y>
                     <color>0</color>
                     <shaderMode>False</shaderMode>
                     <delaySpeedMultX>1</delaySpeedMultX>
@@ -1301,7 +1433,7 @@
                         <name>internalEmitter</name>
                         <expression>sin(1)</expression>
                         <actAsVariable>False</actAsVariable>
-                        <value>25.3430035212532</value>
+                        <value>17.1908356388842</value>
                         <inputMode>9</inputMode>
                         <data>
                           <function>sin({0})</function>
@@ -1334,7 +1466,7 @@
                         <expression>
                         </expression>
                         <actAsVariable>True</actAsVariable>
-                        <value>29.1666666666667</value>
+                        <value>25</value>
                         <inputMode>0</inputMode>
                         <data />
                       </formula>
@@ -1343,7 +1475,715 @@
                         <expression>
                         </expression>
                         <actAsVariable>True</actAsVariable>
-                        <value>68.4210526315789</value>
+                        <value>57.8947368421053</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>17</x>
+                    <y>6</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(17)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>17</id>
+                          <formulaExpression>osc(17)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>70.8333333333333</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>31.5789473684211</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>17</x>
+                    <y>7</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(18)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>18</id>
+                          <formulaExpression>osc(18)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>70.8333333333333</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>36.8421052631579</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>17</x>
+                    <y>8</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(19)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>19</id>
+                          <formulaExpression>osc(19)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>70.8333333333333</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>42.1052631578947</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>19</x>
+                    <y>6</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(20)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>20</id>
+                          <formulaExpression>osc(20)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>79.1666666666667</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>31.5789473684211</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>19</x>
+                    <y>7</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(21)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>21</id>
+                          <formulaExpression>osc(21)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>79.1666666666667</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>36.8421052631579</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>19</x>
+                    <y>8</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(22)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>22</id>
+                          <formulaExpression>osc(22)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>79.1666666666667</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>42.1052631578947</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>21</x>
+                    <y>6</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(23)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>23</id>
+                          <formulaExpression>osc(23)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>87.5</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>31.5789473684211</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>21</x>
+                    <y>7</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(24)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>24</id>
+                          <formulaExpression>osc(24)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>87.5</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>36.8421052631579</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>21</x>
+                    <y>8</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(25)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>25</id>
+                          <formulaExpression>osc(25)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>87.5</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>42.1052631578947</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>23</x>
+                    <y>6</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(26)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>26</id>
+                          <formulaExpression>osc(26)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>95.8333333333333</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>31.5789473684211</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>23</x>
+                    <y>7</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(27)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>27</id>
+                          <formulaExpression>osc(27)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>95.8333333333333</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>36.8421052631579</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                    </formulas>
+                  </emitter>
+                  <emitter>
+                    <direction>255</direction>
+                    <x>23</x>
+                    <y>8</y>
+                    <color>0</color>
+                    <shaderMode>False</shaderMode>
+                    <delaySpeedMultX>1</delaySpeedMultX>
+                    <delaySpeedMultY>1</delaySpeedMultY>
+                    <delaySpeedProfile>0</delaySpeedProfile>
+                    <formulas>
+                      <formula>
+                        <name>internalEmitter</name>
+                        <expression>osc(28)</expression>
+                        <actAsVariable>False</actAsVariable>
+                        <value>0</value>
+                        <inputMode>8</inputMode>
+                        <data>
+                          <id>28</id>
+                          <formulaExpression>osc(28)</formulaExpression>
+                        </data>
+                      </formula>
+                      <formula>
+                        <name>emitterconservationratio</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>emitterspeed</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>0</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionX</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>95.8333333333333</value>
+                        <inputMode>0</inputMode>
+                        <data />
+                      </formula>
+                      <formula>
+                        <name>positionY</name>
+                        <expression>
+                        </expression>
+                        <actAsVariable>True</actAsVariable>
+                        <value>42.1052631578947</value>
                         <inputMode>0</inputMode>
                         <data />
                       </formula>
@@ -1445,6 +2285,78 @@
                     <x>15</x>
                     <y>9</y>
                     <fixtureId>P</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>17</x>
+                    <y>6</y>
+                    <fixtureId>Q</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>17</x>
+                    <y>7</y>
+                    <fixtureId>R</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>17</x>
+                    <y>8</y>
+                    <fixtureId>S</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>19</x>
+                    <y>6</y>
+                    <fixtureId>T</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>19</x>
+                    <y>7</y>
+                    <fixtureId>U</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>19</x>
+                    <y>8</y>
+                    <fixtureId>V</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>21</x>
+                    <y>6</y>
+                    <fixtureId>W</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>21</x>
+                    <y>7</y>
+                    <fixtureId>X</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>21</x>
+                    <y>8</y>
+                    <fixtureId>Y</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>23</x>
+                    <y>6</y>
+                    <fixtureId>Z</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>23</x>
+                    <y>7</y>
+                    <fixtureId>BA</fixtureId>
+                    <attributeId>dimmer</attributeId>
+                  </receptor>
+                  <receptor>
+                    <x>23</x>
+                    <y>8</y>
+                    <fixtureId>BB</fixtureId>
                     <attributeId>dimmer</attributeId>
                   </receptor>
                 </receptors>

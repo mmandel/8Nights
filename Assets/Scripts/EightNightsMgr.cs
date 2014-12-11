@@ -321,6 +321,14 @@ public class EightNightsMgr : MonoBehaviour
       return false;
    }
 
+   public Color GetDefaultColor(GroupID g)
+   {
+      LightGroupConfig lg = FindGroupConfig(g);
+      if (lg != null)
+         return lg.DefaultColor;
+      return Color.white;
+   }
+
    public void SendLightTriggeredEvent(GroupID g, LightID l)
    {
       if (OnLightEffectTriggered != null)

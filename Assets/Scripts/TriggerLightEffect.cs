@@ -225,7 +225,7 @@ public class TriggerLightEffect : MonoBehaviour
 
    List<EffectEntry> PickEffects(EightNightsMIDIMgr.EightNightsMIDIEventArgs midiEvent)
    {
-      if (EffectsToTrigger.Length > 0)
+      if ((EffectsToTrigger != null) && (EffectsToTrigger.Length > 0))
       {
          _lastPickedEffects.Clear();
 
@@ -308,11 +308,13 @@ public class TriggerLightEffect : MonoBehaviour
       {
          //pick an effect to trigger
          List<EffectEntry> effectsToTrigger = PickEffects(e);
-
-         foreach (EffectEntry effectEntry in effectsToTrigger)
+         if (effectsToTrigger != null)
          {
-            if (effectEntry.LightEffectToTrigger != null)
-               effectEntry.Trigger(this, false, e);
+            foreach (EffectEntry effectEntry in effectsToTrigger)
+            {
+               if (effectEntry.LightEffectToTrigger != null)
+                  effectEntry.Trigger(this, false, e);
+            }
          }
       }
    }

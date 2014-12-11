@@ -72,17 +72,20 @@ public class SpectrogramMgr : MonoBehaviour
             return;
 
          Vector2 startPos = new Vector2(10, 150);
-         float boxWidth = 10;
-         float boxSpacing = 5;
+         float boxWidth = 20;
+         float boxSpacing = 3;
          float boxHeight = 100;
 
          Vector2 curPos = startPos;
+         int idx = 0;
+         float stemVolume = EightNightsAudioMgr.Instance.MusicPlayer.GetVolumeForGroup(Group);
          foreach (AnimationCurve c in _spectroCurves)
          {
-            float curveVal = c.Evaluate(BeatClock.Instance.elapsedSecs);
-            GUI.Box(new Rect(curPos.x, curPos.y, boxWidth, curveVal*boxHeight), "");
+            float curveVal = Mathf.Clamp01(c.Evaluate(BeatClock.Instance.elapsedSecs));
+            GUI.Box(new Rect(curPos.x, curPos.y, boxWidth, stemVolume*curveVal * boxHeight + 20), idx.ToString());
             
             curPos.x += boxWidth + boxSpacing;
+            idx++;
          }
       }
 
