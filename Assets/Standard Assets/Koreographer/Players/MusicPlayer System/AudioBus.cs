@@ -23,11 +23,13 @@ public class AudioBus : MonoBehaviour
 	AudioClip busClip = null;
 	int busChannels = 2;
 	int busFrequency = 44100;
+	float busLengthInSeconds = 1;	// Default (sample length / frequency)
 
 	// <--------- Timing stuffs --------->
 	int prevSourcePlayTime = 0;
 	uint busPlaySampleTime = 0;
 	uint busReadSampleTime = 0;		//TODO: Handle uint-wrapping!  This happens when busReadSampleTime goes over uint.maxValue.
+	float lastUpdateRealTime = 0f;
 
 	// <--------- State-Sanity stuffs --------->
 	bool bColdStart = true;
@@ -125,17 +127,7 @@ public class AudioBus : MonoBehaviour
 		{
 			enabled = false;
 		}
-
-		//TODO: determine optimal DSP Buffer Size for best latency - probably platform dependent.
-		//AudioSettings.SetDSPBufferSize(256, 4);
 	}
-
-
-   void OnDestroy()
-   {
-      if (busClip != null)
-         Object.DestroyImmediate(busClip);
-   }
 	
 	void Update()
 	{
@@ -144,6 +136,7 @@ public class AudioBus : MonoBehaviour
 			int curSourceTime = sourceCom.timeSamples;
 			int sourceTimeDiff = 0;
 
+			// Simple read, or did we loop around the end.
 			if (curSourceTime < prevSourcePlayTime)
 			{
 				sourceTimeDiff = curSourceTime + (busClip.samples - prevSourcePlayTime);
@@ -151,6 +144,15 @@ public class AudioBus : MonoBehaviour
 			else
 			{
 				sourceTimeDiff = curSourceTime - prevSourcePlayTime;
+			}
+
+			// Adjust for extremely low framerates: this compensates for situations where the
+			//  buffer loops while something like a load opperation blocks the Main thread for
+			//  too long.
+			float delta = Time.realtimeSinceStartup - lastUpdateRealTime;
+			if (delta > busLengthInSeconds)
+			{
+				sourceTimeDiff += Mathf.FloorToInt(delta / busLengthInSeconds) * BUS_SAMPLE_LENGTH;
 			}
 
 			if (sourceTimeDiff > 0)
@@ -185,6 +187,8 @@ public class AudioBus : MonoBehaviour
 				prevSourcePlayTime = curSourceTime;
 			}
 		}
+
+		lastUpdateRealTime = Time.realtimeSinceStartup;
 	}
 
 	/// <summary>
@@ -199,6 +203,7 @@ public class AudioBus : MonoBehaviour
 		sourceCom = com;
 		busChannels = numChannels;
 		busFrequency = frequency;
+		busLengthInSeconds = (float)BUS_SAMPLE_LENGTH / (float)busFrequency;
 		
 		sourceCom.Stop();
 		Object.DestroyImmediate(busClip);
@@ -506,6 +511,11 @@ public class AudioBus : MonoBehaviour
 				// Stop the set position callback from resetting our bus location as we're now warmed up and running.
 				bColdStart = false;
 			}
+		}
+
+		if (lastUpdateRealTime == 0f)
+		{
+			lastUpdateRealTime = Time.realtimeSinceStartup;
 		}
 	}
 

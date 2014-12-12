@@ -182,6 +182,14 @@ public class EightNightsMusicPlayer : MonoBehaviour, KoreographerInterface
    void Start()
    {
       _firstUpdate = true;
+
+      //		bus.Init(audioCom, playbackMusic.Channels, playbackMusic.Frequency);		// CAN'T DO THIS!  Need to Init the AudioGroup before the Properties will work.
+      /*bus.Init(audioCom, musicChannels, musicFrequency);
+
+      if (playbackMusic != null && !playbackMusic.IsEmpty())
+      {
+         PlayMusic(playbackMusic);
+      }*/
    }
 
    void OnDisable()
