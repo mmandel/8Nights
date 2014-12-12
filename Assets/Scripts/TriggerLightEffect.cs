@@ -13,6 +13,8 @@ public class TriggerLightEffect : MonoBehaviour
    public TriggerMode TriggerRule = TriggerMode.Sequential; //how do we pick an effect to trigger?
 
    public bool ApplyNoteVelocity = false; //scale effect intensity with note velocity
+   [Range(0.0f, 1.0f)]
+   public float MinNoteVelocity = 0.0f;
 
    public EffectEntry ButtonEffect = null;
 
@@ -65,7 +67,7 @@ public class TriggerLightEffect : MonoBehaviour
                }
             }
             spawnedLightEffect.LightGroup = parentEffect.MIDIGroup;
-            spawnedLightEffect.MasterFader = parentEffect.ApplyNoteVelocity ? midiEvent.Velocity : 1.0f;
+            spawnedLightEffect.MasterFader = parentEffect.ApplyNoteVelocity ? Mathf.Lerp(parentEffect.MinNoteVelocity, 1.0f, midiEvent.Velocity) : 1.0f;
             spawnedLightEffect.AutoTrigger = true;            
             spawnedLightEffect.TriggerEffect(); //redundant, I know
             if (forceLooping)

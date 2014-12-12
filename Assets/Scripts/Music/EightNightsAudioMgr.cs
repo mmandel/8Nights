@@ -213,8 +213,11 @@ public class EightNightsAudioMgr : MonoBehaviour
 
       foreach (EightNightsMIDIMgr.MIDIConfig c in EightNightsMIDIMgr.Instance.MIDIConfigs)
       {
-         c.MIDIReceiver.MIDITimeMult = _isDoubleTempo ? 2.0f : 1.0f;
-         c.MIDIReceiver.ReImportMIDI();
+         if (c.MIDIReceiver.gameObject.activeSelf)
+         {
+            c.MIDIReceiver.MIDITimeMult = _isDoubleTempo ? 2.0f : 1.0f;
+            c.MIDIReceiver.ReImportMIDI();
+         }
       }
    }
 

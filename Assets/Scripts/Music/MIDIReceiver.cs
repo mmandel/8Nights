@@ -32,6 +32,8 @@ public class MIDIReceiver : MonoBehaviour
    public int MIDITrackIdx = 0;
    public float MIDITimeMult = 1.0f;
 
+   public float BeatOffset = 0.0f;
+
    public class NoteInfo
    {
       public int NoteNumber;
@@ -103,7 +105,8 @@ public class MIDIReceiver : MonoBehaviour
 
    public void ReImportMIDI()
    {
-      MidiFile mid = new MidiFile(MIDIResourcePath);
+      Debug.Log("MIDIReceiver: About to load " + MIDIResourcePath);
+      MidiFile mid = new MidiFile(MIDIResourcePath, false);
       if (mid.Events == null)
       {
          Debug.Log("MIDIReceiver: Resource load failed- " + MIDIResourcePath);
@@ -143,7 +146,9 @@ public class MIDIReceiver : MonoBehaviour
       if (_noteOns == null)
          return;
 
-      float curBeat = BeatClock.Instance.elapsedBeats;
+      float curBeat = BeatClock.Instance.elapsedBeats + BeatOffset;
+      if (curBeat < 0.0f)
+         curBeat = 0.0f;
       foreach (NoteInfo info in _noteOns)
       {
          if ((info.NoteOnBeat > _prevBeat) && (info.NoteOnBeat <= curBeat))
