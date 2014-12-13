@@ -68,7 +68,14 @@ public class RiftButtonMgr : MonoBehaviour
          float progressU = 1.0f - Mathf.InverseLerp(ProgressAngleThreshMin, ProgressAngleThreshMax, angle);
          b.SelectionProgress = progressU;
 
-         if ((angle < smallestAngle) && (angle < ProgressAngleThreshMax))
+         bool maxAngleCheckPassed = (angle < ProgressAngleThreshMax);
+         //only have a max angle if track is currently off, so you're forced to look at the button
+         //if its on, we still want to allow you to turn it off by looking at the tops of any tower...
+         EightNightsAudioMgr.GroupStateData stateData =  EightNightsAudioMgr.Instance.GetStateForGroup(b.GroupToActivate);
+         if (stateData.LoopState == EightNightsAudioMgr.StemLoopState.Sustaining)
+            maxAngleCheckPassed = true;
+
+         if ((angle < smallestAngle) && maxAngleCheckPassed)
          {
             smallestAngle = angle;
             closestButton = b;
