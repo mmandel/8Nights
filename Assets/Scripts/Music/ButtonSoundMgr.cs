@@ -117,9 +117,18 @@ public class ButtonSoundMgr : MonoBehaviour
             {
                //how far do we fast forward in?
                float startTime = DownBeatMoment - secsTillNextDownBeat;
-
-               MusicPlayer.audio.Stop(); //TODO: fade in?
-               MusicPlayer.audio.timeSamples = (int)(startTime * (float)MusicPlayer.audio.clip.frequency);
+               
+               MusicPlayer.audio.Stop();
+               if (IsReversed())
+               {
+                  MusicPlayer.audio.pitch = -.50f;
+                  MusicPlayer.audio.time = DownBeatMoment;
+               }
+               else
+               {
+                  MusicPlayer.audio.pitch =  1.0f;
+                  MusicPlayer.audio.time = startTime;
+               }
                MusicPlayer.Play();
 
                _scheduling = false;
