@@ -16,8 +16,10 @@ public class TriggerLightEffect : MonoBehaviour
    [Range(0.0f, 1.0f)]
    public float MinNoteVelocity = 0.0f;
 
+   public bool ButtonEffectEnabled = true;
    public EffectEntry ButtonEffect = null;
 
+   public bool EffectsEnabled = true;
    public EffectEntry[] EffectsToTrigger = new EffectEntry[1]; //the actual effects
 
    public MIDINoteMapping[] NoteMappings = new MIDINoteMapping[0]; //optional mappings from midi notes to particular effects
@@ -192,6 +194,9 @@ public class TriggerLightEffect : MonoBehaviour
 
    void OnCrescendoBegin(object sender, ButtonSoundMgr.ButtonCrescendoEventArgs e)
    {
+      if (!ButtonEffectEnabled)
+         return;
+
       if (e.Group == MIDIGroup)
       {
          Debug.Log("Crescendo BEGIN for group '" + e.Group.ToString());
@@ -205,6 +210,9 @@ public class TriggerLightEffect : MonoBehaviour
 
    void OnCrescendoEnd(object sender, ButtonSoundMgr.ButtonCrescendoEventArgs e)
    {
+      if (!ButtonEffectEnabled)
+         return;
+
       if (e.Group == MIDIGroup)
       {
          Debug.Log("Crescendo END for group '" + e.Group.ToString());
@@ -306,6 +314,9 @@ public class TriggerLightEffect : MonoBehaviour
 
    void OnLightMIDIEvent(object sender, EightNightsMIDIMgr.EightNightsMIDIEventArgs e)
    {
+      if (!EffectsEnabled)
+         return;
+
       if ((e.Group == MIDIGroup) && IsGroupPlaying() && !ButtonSoundMgr.Instance.IsGroupCrescendoing(MIDIGroup))
       {
          //pick an effect to trigger
