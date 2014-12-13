@@ -129,7 +129,7 @@ public class MIDIReceiver : MonoBehaviour
                newNote.Velocity = noteEvent.Velocity / 127.0f;
                _noteOns.Add(newNote);
 
-               //Debug.Log("  imported midi Note " + noteEvent.NoteNumber + " at beat " + newNote.NoteOnBeat + " duration " + newNote.DurationBeats);
+               Debug.Log("  imported midi Note " + noteEvent.NoteNumber + " at beat " + newNote.NoteOnBeat + " duration " + newNote.DurationBeats);
             }
             catch (System.SystemException e) { Debug.Log("Error during midi import: " + e.Message); }
          }
