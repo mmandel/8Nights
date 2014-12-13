@@ -17,7 +17,8 @@ public class EightNightsAudioMgr : MonoBehaviour
    public int BaseBPM = 84;
    public bool StartDoubleTempo = false;
    public float StemAttackTime = 1.0f;
-   public float StemSustainTime = 10.0f;
+   public float RoomSustainTime = 32.0f;
+   public float RiftSustainTime = 32.0f;
    public float StemReleaseTime = 3.0f;
    public bool  EnableSoloDucking = true;
    public float SoloTime = 5.0f;
@@ -350,7 +351,7 @@ public class EightNightsAudioMgr : MonoBehaviour
       // text fields for stem tuning params
          startPos.x = Screen.width * .5f - 150;
          startPos.y = 10;
-         groupSize = new Vector2(200, buttonVSpacing * 4 + 30);
+         groupSize = new Vector2(200, buttonVSpacing * 5 + 30);
          GUI.Box(new Rect(startPos.x, startPos.y, groupSize.x, groupSize.y), "Stem Behavior");
          //Attack Time
          startPos.y += buttonVSpacing;
@@ -366,17 +367,31 @@ public class EightNightsAudioMgr : MonoBehaviour
                ResetAllStemTimestamps();
             }
          }
-         //Sustain Time
+         //Sustain Time (Rift)
          startPos.y += buttonVSpacing;
-         GUI.Label(new Rect(startPos.x + 10, startPos.y, groupSize.x - 50, 20), "Sustain Time: ");
-         string sustainStr = StemSustainTime.ToString();
+         GUI.Label(new Rect(startPos.x + 10, startPos.y, groupSize.x - 50, 20), "Sustain Time (Rift): ");
+         string sustainStr = RiftSustainTime.ToString();
          string newSustainStr = GUI.TextField(new Rect(startPos.x + 10 + groupSize.x - 70, startPos.y, 50, 20), sustainStr);
          if (!newSustainStr.Equals(sustainStr))
          {
             float newSustain = 0.0f;
             if (float.TryParse(newSustainStr, out newSustain))
             {
-               StemSustainTime = newSustain;
+               RiftSustainTime = newSustain;
+               ResetAllStemTimestamps();
+            }
+         }
+         //Sustain Time (Room)
+         startPos.y += buttonVSpacing;
+         GUI.Label(new Rect(startPos.x + 10, startPos.y, groupSize.x - 50, 20), "Sustain Time (Room): ");
+         sustainStr = RoomSustainTime.ToString();
+         newSustainStr = GUI.TextField(new Rect(startPos.x + 10 + groupSize.x - 70, startPos.y, 50, 20), sustainStr);
+         if (!newSustainStr.Equals(sustainStr))
+         {
+            float newSustain = 0.0f;
+            if (float.TryParse(newSustainStr, out newSustain))
+            {
+               RoomSustainTime = newSustain;
                ResetAllStemTimestamps();
             }
          }
@@ -509,26 +524,36 @@ public class EightNightsAudioMgr : MonoBehaviour
       return null;
    }
 
+   float GetSustainTimeForGroup(EightNightsMgr.GroupID group)
+   {
+      if (group.ToString().Contains("Rift"))
+         return RiftSustainTime;
+      else
+         return RoomSustainTime;
+   }
+
    public void TriggerGroup(EightNightsMgr.GroupID group)
    {
-      //TODO: temp behavior
-      //we should eventually trigger button sound and wait for downbeat to start fading in track...
-      if (ButtonSoundManager != null)
-         ButtonSoundManager.TriggerSoundForGroup(group);
+      bool shouldReverseCrescendo = false;
 
       GroupStateData stateData = GetStateForGroup(group);
       if (stateData != null)
       {
          stateData.CaptureTimestamp(); //reset decay timers
 
-         //This now happens in Update in response to crescendo progress
-         /*if (stateData.LoopState != StemLoopState.Sustaining)
+         //If track already on, then we toggle it off
+         if (stateData.LoopState == StemLoopState.Sustaining)
          {
-            stateData.LoopState = StemLoopState.Attacking;
-         }*/
+            shouldReverseCrescendo = true;
+            stateData.LoopState = StemLoopState.Releasing;
+         }
       }
 
-      if (EnableSoloDucking)
+      if (ButtonSoundManager != null)
+         ButtonSoundManager.TriggerSoundForGroup(group, shouldReverseCrescendo);
+
+
+      if (EnableSoloDucking && !shouldReverseCrescendo)
       {
          _roomSoloing.MakeSoloist(group);
          _riftSoloing.MakeSoloist(group);
@@ -537,11 +562,12 @@ public class EightNightsAudioMgr : MonoBehaviour
       //keep peak alive, add a couple seconds to peak mode
       if (_peakGroupState.LoopState == StemLoopState.Sustaining)
       {
+         float sustainTime = GetSustainTimeForGroup(group);
          float secsToAdd = 2.0f;
          float elapsedTime = Time.time - _peakGroupState.Timestamp();
-         float timeLeft = Mathf.Clamp(StemSustainTime - elapsedTime, 0.0f, StemSustainTime);
-         if (timeLeft + secsToAdd > StemSustainTime)
-            secsToAdd = StemSustainTime - timeLeft;
+         float timeLeft = Mathf.Clamp(sustainTime - elapsedTime, 0.0f, sustainTime);
+         if (timeLeft + secsToAdd > sustainTime)
+            secsToAdd = sustainTime - timeLeft;
          _peakGroupState.SetTimestamp(_peakGroupState.Timestamp() + secsToAdd);
       }
    }
@@ -660,7 +686,8 @@ public class EightNightsAudioMgr : MonoBehaviour
             {
                MusicPlayer.SetPeakLoopVolume(1.0f);
 
-               float u = Mathf.Clamp01((Time.time - _peakGroupState.Timestamp()) / StemSustainTime);
+               float sustainTime = GetSustainTimeForGroup(_peakGroupState.Group);
+               float u = Mathf.Clamp01((Time.time - _peakGroupState.Timestamp()) / sustainTime);
 
                if (Mathf.Approximately(u, 1.0f))
                {
@@ -687,10 +714,11 @@ public class EightNightsAudioMgr : MonoBehaviour
             if ((d.LoopState != StemLoopState.Sustaining) && (d.LoopState != StemLoopState.Attacking))
             {
                bool isCrescendoing = ButtonSoundMgr.Instance.IsGroupCrescendoing(d.Group);
+               bool isReversing = ButtonSoundMgr.Instance.IsGroupCrescendoingReversed(d.Group);
                float crescendoTimeRemaining = ButtonSoundMgr.Instance.GetCrescendoTimeRemainaingForGroup(d.Group);
                //if(isCrescendoing)
                //   Debug.Log("Crescendo Time Remaining for " + d.Group.ToString() + ": " + crescendoTimeRemaining);
-               if (isCrescendoing && (crescendoTimeRemaining < StemAttackTime))
+               if (!isReversing && isCrescendoing && (crescendoTimeRemaining < StemAttackTime))
                {
                   //Debug.Log("  ATTACK GROUP " + d.Group.ToString());
                   d.LoopState = StemLoopState.Attacking;
@@ -717,7 +745,8 @@ public class EightNightsAudioMgr : MonoBehaviour
             {
                MusicPlayer.SetVolumeForGroup(d.Group, d.MasterFader*1.0f);
 
-               float u =  Mathf.Clamp01((Time.time - d.Timestamp()) / StemSustainTime);
+               float sustainTime = GetSustainTimeForGroup(d.Group);
+               float u = Mathf.Clamp01((Time.time - d.Timestamp()) / sustainTime);
 
                if (Mathf.Approximately(u, 1.0f))
                {

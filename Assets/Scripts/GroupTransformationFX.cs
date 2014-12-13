@@ -33,6 +33,7 @@ public class GroupTransformationFX : MonoBehaviour
       _animator.speed = 0.0f;
 
       bool isCrescendoing = ButtonSoundMgr.Instance.IsGroupCrescendoing(Group);
+      bool isReversing = ButtonSoundMgr.Instance.IsGroupCrescendoingReversed(Group);
       float crescendoProgress = ButtonSoundMgr.Instance.GetCrescendoProgressForGroup(Group);
       float trackVolume = EightNightsAudioMgr.Instance.MusicPlayer.GetVolumeForGroup(Group);
       EightNightsAudioMgr.GroupStateData groupAudioState = EightNightsAudioMgr.Instance.GetStateForGroup(Group);
@@ -47,6 +48,9 @@ public class GroupTransformationFX : MonoBehaviour
          }
          else*/
             u = crescendoProgress;
+
+            if (isReversing)
+               u = 1.0f - u;
       }
       else
       {
@@ -54,7 +58,9 @@ public class GroupTransformationFX : MonoBehaviour
             u = 1.0f;
          else
             u = 0.0f;*/
-         if (groupAudioState.LoopState == EightNightsAudioMgr.StemLoopState.Releasing)
+         if (isReversing)
+            u = 0.0f;
+         else if (!isReversing && (groupAudioState.LoopState == EightNightsAudioMgr.StemLoopState.Releasing))
             u = trackVolume;
          else if (groupAudioState.LoopState == EightNightsAudioMgr.StemLoopState.Off)
             u = 0.0f;

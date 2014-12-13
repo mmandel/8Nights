@@ -43,10 +43,12 @@ public class ButtonSoundMgr : MonoBehaviour
          return (60.0f / BeatClock.Instance.bpm) * beats;
       }
 
-      public void ScheduleForDownBeat() 
+      public void ScheduleForDownBeat(bool shouldReverse) 
       { 
          if (!_scheduling)
-         { 
+         {
+            _isReversed = shouldReverse;
+
             _scheduling = true; 
             _scheduleStartTime = BeatClock.Instance.elapsedSecs; 
             _scheduleStartBeat = BeatClock.Instance.elapsedBeats;
@@ -99,6 +101,11 @@ public class ButtonSoundMgr : MonoBehaviour
          }
       }
 
+      public bool IsReversed()
+      {
+         return _isReversed;
+      }
+
       public void Update()
       {
          if (_scheduling)
@@ -143,6 +150,8 @@ public class ButtonSoundMgr : MonoBehaviour
       private float _nextDownBeat = -1.0f;
 
       private float _crescendoProgress = 0.0f;
+
+      private bool _isReversed = false;
    }
 
    void Awake()
@@ -154,6 +163,14 @@ public class ButtonSoundMgr : MonoBehaviour
    {
       float progress = GetCrescendoProgressForGroup(group);
       return (progress > 0.0f) && (progress < 1.0f);
+   }
+
+   public bool IsGroupCrescendoingReversed(EightNightsMgr.GroupID group)
+   {
+      ButtonConfig c = FindButtonConfig(group);
+      if (c != null)
+         return c.IsReversed();
+      return false;
    }
 
    public float GetCrescendoProgressForGroup(EightNightsMgr.GroupID group)
@@ -174,7 +191,7 @@ public class ButtonSoundMgr : MonoBehaviour
       return 0.0f;
    }   
 
-   public void TriggerSoundForGroup(EightNightsMgr.GroupID group)
+   public void TriggerSoundForGroup(EightNightsMgr.GroupID group, bool shouldReverseCrescendo)
    {
       ButtonConfig c = FindButtonConfig(group);
       if ((c != null) && (c.MusicPlayer != null))
@@ -183,15 +200,18 @@ public class ButtonSoundMgr : MonoBehaviour
          if (EightNightsMgr.Instance != null)
             EightNightsMgr.Instance.SendButtonTriggeredEvent(group);
 
-         if (!c.AlignToDownBeat) //just fire off one-off
+         if (!IsGroupCrescendoing(group)) //ignore if group already crescendoing
          {
-            //TODO: should spawn these things so we don't have to cut anything off
-            c.MusicPlayer.Stop();
-            c.MusicPlayer.Play();
-         }
-         else
-         {
-            c.ScheduleForDownBeat();
+            if (!c.AlignToDownBeat) //just fire off one-off
+            {
+               //TODO: should spawn these things so we don't have to cut anything off
+               c.MusicPlayer.Stop();
+               c.MusicPlayer.Play();
+            }
+            else
+            {
+               c.ScheduleForDownBeat(shouldReverseCrescendo);
+            }
          }
       }
    }
