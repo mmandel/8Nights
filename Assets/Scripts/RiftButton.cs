@@ -38,6 +38,8 @@ public class RiftButton : MonoBehaviour
    [AnimatorState("PressedLayer")]
    public string PressedState = "";
    public float PressedAnimTime = 1.0f;
+   [Space(10)]
+   public ParticleSystem[] ParticlesOnPressed = new ParticleSystem[0];
 
    [Header("Testing")]
    [Range(0.0f, 1.0f)]
@@ -64,6 +66,11 @@ public class RiftButton : MonoBehaviour
    public void TriggerPress(string propPath = "")
    {
       _pressTimestamp = Time.time;
+
+      foreach (ParticleSystem p in ParticlesOnPressed)
+      {
+         p.Play();
+      }
 
       if(EightNightsAudioMgr.Instance != null)
          EightNightsAudioMgr.Instance.TriggerGroup(GroupToActivate);
