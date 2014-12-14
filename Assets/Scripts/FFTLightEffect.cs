@@ -26,6 +26,8 @@ public class FFTLightEffect : MonoBehaviour
    public float Release = 0.0f;
    [Range(0, 1)]
    public float SmoothingAmt = 0.0f;
+   [Range(0, 5)]
+   public float Gain = 1.0f;
    public bool AutoDynamicRange = false;
    public float UpdateRangeInterval = 4.0f;
    public float RangeAdjustSpeed = .25f;
@@ -70,7 +72,7 @@ public class FFTLightEffect : MonoBehaviour
       {
          curSignal += fftData.GetBandValue(i, timeToSample);
       }
-      curSignal = Mathf.Clamp01(curSignal / numSamples);
+      curSignal = Mathf.Clamp01(Gain * (curSignal / numSamples));
 
       //fade with volume
       float groupFader = 1.0f;
