@@ -41,6 +41,9 @@ public class EightNightsArduinoButton : MonoBehaviour
 
       bool newButtonPressed = (buttonState == Arduino.LOW);
 
+      //update persistent pressed state
+      EightNightsMgr.Instance.SetButtonPressedState(Group, newButtonPressed);
+
       if (newButtonPressed != ButtonPressed)
       {
          ButtonPressed = newButtonPressed;

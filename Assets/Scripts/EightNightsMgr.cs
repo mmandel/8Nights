@@ -12,6 +12,7 @@ public class EightNightsMgr : MonoBehaviour
    [Range(0.0f, 1.0f)]
    public float MasterFader = 1.0f;
    public bool TestLights = false;
+   public bool ProceduralButtonFX = true;
    public LightGroupConfig[] LightGroups = new LightGroupConfig[1];
    
 
@@ -87,6 +88,11 @@ public class EightNightsMgr : MonoBehaviour
       public GroupID Group = GroupID.RiftGroup1;
       public Color DefaultColor = Color.white;
       public LightConfig[] Lights = new LightConfig[1];
+
+      public bool IsButtonPressed() { return _isButtonPressed; }
+      public void SetIsButtonPressed(bool pressed) { _isButtonPressed = pressed; } 
+
+      private bool _isButtonPressed = false;
 
    }
    
@@ -227,6 +233,9 @@ public class EightNightsMgr : MonoBehaviour
 
       //subscribe to updates from LightJamsMgr, which get forwarded to in-game effects triggers
       LightJamsMgr.Instance.OnLightChanged += OnLightJamsLightChanged;
+
+      if (ButtonSoundMgr.Instance != null)
+         ButtonSoundMgr.Instance.OnCrescendoEnd += OnCrescendoEnd;
 
       //generate the configuration for the HueMessenger based on our configuration
       HueMessenger.Instance.Lights = new HueMessenger.Light[NumLightsOfType(LightTypes.Hue)];
@@ -451,6 +460,15 @@ public class EightNightsMgr : MonoBehaviour
       if(OnLightChanged != null)
          OnLightChanged(this, new LightEventArgs(gID, lID, LightTypes.Hue, newData));
    }
+
+   public void SetButtonPressedState(GroupID group, bool pressed)
+   {
+      LightGroupConfig lg = FindGroupConfig(group);
+      if (lg != null)
+      {
+         lg.SetIsButtonPressed(pressed);
+      }
+   }
    
 
    void OnLightJamsLightChanged(object sender, LightJamsMgr.LJEventArgs e)
@@ -464,6 +482,15 @@ public class EightNightsMgr : MonoBehaviour
             LightGroupConfig config = FindGroupConfig(gID);
             OnLightChanged(this, new LightEventArgs(gID, lID, LightTypes.LightJams, new LightData(config.DefaultColor, e.Intensity)));
          }
+      }
+   }
+
+   void OnCrescendoEnd(object sender, ButtonSoundMgr.ButtonCrescendoEventArgs e)
+   {
+      //turn off lights at end of crescendo to allow for music FX to come through
+      if (ProceduralButtonFX)
+      {
+         SetAllLightsInGroup(e.Group, 0.0f, GetDefaultColor(e.Group), .25f);
       }
    }
 
@@ -504,7 +531,7 @@ public class EightNightsMgr : MonoBehaviour
       //run test patterns through all the lights
       if (TestLights)
       {
-         Color[] testColors = new Color[] {  Color.red, Color.red, Color.green, Color.green, Color.blue, Color.blue, Color.yellow, Color.yellow };
+         Color[] testColors = new Color[] { Color.red, Color.red, Color.green, Color.green, Color.blue, Color.blue, Color.yellow, Color.yellow };
          float[] testIntensities = new float[] { 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 
          for (int i = 0; i < LightGroups.Length; i++)
@@ -525,6 +552,31 @@ public class EightNightsMgr : MonoBehaviour
                   lc.Set(testColor, testIntensity, 1.0f);
 
                   lc.SetDebugNum(testNum);
+               }
+            }
+         }
+      }
+      else
+      {
+         if (ProceduralButtonFX)
+         {
+            for (int i = 0; i < LightGroups.Length; i++)
+            {
+               LightGroupConfig lg = LightGroups[i];
+               bool isCresendoing = ButtonSoundMgr.Instance.IsGroupCrescendoing(lg.Group);
+               bool isReversing = ButtonSoundMgr.Instance.IsGroupCrescendoingReversed(lg.Group);
+               bool isButtonPressed = lg.IsButtonPressed(); 
+
+               float cProgress = ButtonSoundMgr.Instance.GetCrescendoProgressForGroup(lg.Group);
+               if (isReversing)
+                  cProgress = 1.0f - cProgress;
+               for (int j = 0; j < lg.Lights.Length; j++)
+               {
+                  LightConfig lc = lg.Lights[j];
+                  if ((j == 0) && isButtonPressed) //first light is alway on when you have button pressed in
+                     SetLight(lg.Group, (LightID)j, 1.0f);
+                  else if(isCresendoing) //set light to crescendo progress
+                     SetLight(lg.Group, (LightID)j, cProgress);
                }
             }
          }

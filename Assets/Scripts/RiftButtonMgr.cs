@@ -95,6 +95,11 @@ public class RiftButtonMgr : MonoBehaviour
       if (Input.GetKeyDown(PressCheat) ||  Input.GetButtonDown("Fire1"))
          PressButton();
 
+      //update persistent pressed state
+      bool curPressed = Input.GetKey(PressCheat) || Input.GetButton("Fire1");
+      if (_selectedButton != null)
+         EightNightsMgr.Instance.SetButtonPressedState(_selectedButton.GroupToActivate, curPressed);
+
       //handle arduino button press
       if ((_arduino != null) && _arduino.Connected)
       {
