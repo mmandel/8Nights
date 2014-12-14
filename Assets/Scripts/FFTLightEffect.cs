@@ -63,7 +63,8 @@ public class FFTLightEffect : MonoBehaviour
          return;
 
       SpectrogramMgr.SpectroConfig fftData =  SpectrogramMgr.Instance.GetSpectroDataForGroup(Group);
-      float timeToSample = BeatClock.Instance.elapsedSecs + EightNightsMgr.Instance.GetLatency(Group, Light);
+      float timeToSample = SpectrogramMgr.Instance.GetFFTTime();
+      timeToSample += EightNightsMgr.Instance.GetLatency(Group, Light);
 
       //average the frequency bins to get our signal value
       float curSignal = 0.0f;

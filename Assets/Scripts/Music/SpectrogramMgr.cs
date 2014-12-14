@@ -78,10 +78,11 @@ public class SpectrogramMgr : MonoBehaviour
 
          Vector2 curPos = startPos;
          int idx = 0;
+         float fftTime = SpectrogramMgr.Instance.GetFFTTime();
          float stemVolume = EightNightsAudioMgr.Instance.MusicPlayer.GetVolumeForGroup(Group);
          foreach (AnimationCurve c in _spectroCurves)
          {
-            float curveVal = Mathf.Clamp01(c.Evaluate(BeatClock.Instance.elapsedSecs));
+            float curveVal = Mathf.Clamp01(c.Evaluate(fftTime));
             GUI.Box(new Rect(curPos.x, curPos.y, boxWidth, stemVolume*curveVal * boxHeight + 20), idx.ToString());
             
             curPos.x += boxWidth + boxSpacing;
@@ -110,6 +111,16 @@ public class SpectrogramMgr : MonoBehaviour
    {
       foreach (SpectroConfig c in SpectroConfigs)
          c.Load();
+   }
+
+   public float GetFFTTime()
+   {
+      float timeToSample = BeatClock.Instance.elapsedSecs;
+
+      //WHY?!
+      timeToSample -= BeatClock.Instance.LatencySecs();
+
+      return timeToSample;
    }
 
    void Update()

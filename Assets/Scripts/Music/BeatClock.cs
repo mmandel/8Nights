@@ -146,7 +146,7 @@ public class BeatClock : MonoBehaviour {
       ResetClock();
 	}
 
-   float LatencySecs()
+   public float LatencySecs()
    {
       return (LatencyMs / 1000.0f);
    }
