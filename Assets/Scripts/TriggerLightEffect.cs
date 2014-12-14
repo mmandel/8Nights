@@ -103,6 +103,11 @@ public class TriggerLightEffect : MonoBehaviour
                   delayedEvent.Group = parentEffect.MIDIGroup;
                   delayedEvent.Light = lID;
                   delayedEvent.BeatTime = midiEvent.NoteBeat;
+
+                  //WHY?
+                  delayedEvent.BeatTime -= (BeatClock.Instance.LatencySecs() / BeatClock.Instance.SecsPerBeat()); 
+
+
                   parentEffect.AddDelayedEvent(delayedEvent);
                }
             }
