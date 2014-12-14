@@ -11,7 +11,8 @@ public class TriggerLightEffect : MonoBehaviour
    public EightNightsMgr.GroupID MIDIGroup; //what midi stream do we listen to?
 
    public TriggerMode TriggerRule = TriggerMode.Sequential; //how do we pick an effect to trigger?
-
+   public bool FollowPitchClamping = true; //do we wrap around or clamp when following pitch
+   [Space(10)]
    public bool ApplyNoteVelocity = false; //scale effect intensity with note velocity
    [Range(0.0f, 1.0f)]
    public float MinNoteVelocity = 0.0f;
@@ -293,12 +294,29 @@ public class TriggerLightEffect : MonoBehaviour
             else
             {
                if (midiEvent.MidiNote > _lastMIDINote) //higher note, move up
-                  _lastPickedIdx = (_lastPickedIdx + 1) % EffectsToTrigger.Length;
+               {
+                  _lastPickedIdx++;
+                  if(FollowPitchClamping) //clamp
+                  {
+				         if(_lastPickedIdx >= EffectsToTrigger.Length - 1)
+                        _lastPickedIdx = EffectsToTrigger.Length - 1;
+                  }
+				      else //wrap
+				         _lastPickedIdx = (_lastPickedIdx % EffectsToTrigger.Length);
+               }
                else if (midiEvent.MidiNote < _lastMIDINote) //lower note, move down
                {
                   _lastPickedIdx--;
-                  if (_lastPickedIdx < 0)
-                     _lastPickedIdx = EffectsToTrigger.Length - 1;
+                  if(FollowPitchClamping) //clamp
+                  {
+                     if (_lastPickedIdx < 0)
+                        _lastPickedIdx = 0;
+                  }
+                  else
+                  {
+                     if (_lastPickedIdx < 0)
+                        _lastPickedIdx = EffectsToTrigger.Length - 1;
+                  }
                }
             }
             _lastMIDINote = midiEvent.MidiNote;

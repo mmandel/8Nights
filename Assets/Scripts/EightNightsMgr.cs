@@ -573,7 +573,7 @@ public class EightNightsMgr : MonoBehaviour
                for (int j = 0; j < lg.Lights.Length; j++)
                {
                   LightConfig lc = lg.Lights[j];
-                  if ((j == 0) && isButtonPressed) //first light is alway on when you have button pressed in
+                  if ((j == 0) && isButtonPressed && isCresendoing) //first light is alway on when you have button pressed in
                      SetLight(lg.Group, (LightID)j, 1.0f);
                   else if(isCresendoing) //set light to crescendo progress
                      SetLight(lg.Group, (LightID)j, cProgress);

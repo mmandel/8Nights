@@ -148,7 +148,10 @@ public class ButtonSoundMgr : MonoBehaviour
 
             //done? then send out event
             if (!Mathf.Approximately(prevProgress, 1.0f) && Mathf.Approximately(_crescendoProgress, 1.0f))
+            {
                ButtonSoundMgr.Instance.SendCrescendoEndEvent(Group);
+			   _scheduleStartTime = _scheduleEndTime = -1.0f;
+            }
          }
       }
 
