@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
 
 [System.Serializable]
-public struct HSBColor
+public struct HueHSBColor
 {
    public float h;
    public float s;
    public float b;
    public float a;
 
-   public HSBColor(float h, float s, float b, float a)
+   public HueHSBColor(float h, float s, float b, float a)
    {
       this.h = h;
       this.s = s;
@@ -16,7 +16,7 @@ public struct HSBColor
       this.a = a;
    }
 
-   public HSBColor(float h, float s, float b)
+   public HueHSBColor(float h, float s, float b)
    {
       this.h = h;
       this.s = s;
@@ -24,18 +24,18 @@ public struct HSBColor
       this.a = 1f;
    }
 
-   public HSBColor(Color col)
+   public HueHSBColor(Color col)
    {
-      HSBColor temp = FromColor(col);
+      HueHSBColor temp = FromColor(col);
       h = temp.h;
       s = temp.s;
       b = temp.b;
       a = temp.a;
    }
 
-   public static HSBColor FromColor(Color color)
+   public static HueHSBColor FromColor(Color color)
    {
-      HSBColor ret = new HSBColor(0f, 0f, 0f, color.a);
+      HueHSBColor ret = new HueHSBColor(0f, 0f, 0f, color.a);
 
       float r = color.r;
       float g = color.g;
@@ -86,7 +86,7 @@ public struct HSBColor
       return ret;
    }
 
-   public static Color ToColor(HSBColor hsbColor)
+   public static Color ToColor(HueHSBColor hsbColor)
    {
       float r = hsbColor.b;
       float g = hsbColor.b;
@@ -156,7 +156,7 @@ public struct HSBColor
       return "H:" + h + " S:" + s + " B:" + b;
    }
 
-   public static HSBColor Lerp(HSBColor a, HSBColor b, float t)
+   public static HueHSBColor Lerp(HueHSBColor a, HueHSBColor b, float t)
    {
       float h, s;
 
@@ -194,31 +194,31 @@ public struct HSBColor
          }
          s = Mathf.Lerp(a.s, b.s, t);
       }
-      return new HSBColor(h, s, Mathf.Lerp(a.b, b.b, t), Mathf.Lerp(a.a, b.a, t));
+      return new HueHSBColor(h, s, Mathf.Lerp(a.b, b.b, t), Mathf.Lerp(a.a, b.a, t));
    }
 
    public static void Test()
    {
-      HSBColor color;
+      HueHSBColor color;
 
-      color = new HSBColor(Color.red);
+      color = new HueHSBColor(Color.red);
       Debug.Log("red: " + color);
 
-      color = new HSBColor(Color.green);
+      color = new HueHSBColor(Color.green);
       Debug.Log("green: " + color);
 
-      color = new HSBColor(Color.blue);
+      color = new HueHSBColor(Color.blue);
       Debug.Log("blue: " + color);
 
-      color = new HSBColor(Color.grey);
+      color = new HueHSBColor(Color.grey);
       Debug.Log("grey: " + color);
 
-      color = new HSBColor(Color.white);
+      color = new HueHSBColor(Color.white);
       Debug.Log("white: " + color);
 
-      color = new HSBColor(new Color(0.4f, 1f, 0.84f, 1f));
+      color = new HueHSBColor(new Color(0.4f, 1f, 0.84f, 1f));
       Debug.Log("0.4, 1f, 0.84: " + color);
 
-      Debug.Log("164,82,84   .... 0.643137f, 0.321568f, 0.329411f  :" + ToColor(new HSBColor(new Color(0.643137f, 0.321568f, 0.329411f))));
+      Debug.Log("164,82,84   .... 0.643137f, 0.321568f, 0.329411f  :" + ToColor(new HueHSBColor(new Color(0.643137f, 0.321568f, 0.329411f))));
    }
 }

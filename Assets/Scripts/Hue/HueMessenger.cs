@@ -162,7 +162,7 @@ public class HueMessenger : MonoBehaviour
 
          string apiCall = "/api/" + User + "/lights/" + l.id + "/state";
          float fade = Mathf.Clamp01(l.fade);
-         HSBColor hsbColor = new HSBColor(l.color);
+         HueHSBColor hsbColor = new HueHSBColor(l.color);
          int transitionTime = (int)(l.transitionTime * 10.0f); //this is specified in hundreds of millisecs (i.e 10 = 1000 ms = 1s)
          string body = "{\"on\": " + ((l.on && (fade > 0.0f)) ? "true" : "false") +
                        " \"hue\": " + (int)(hsbColor.h * 65535.0f) +
@@ -206,7 +206,7 @@ public class HueMessenger : MonoBehaviour
 
       string apiCall = "/api/" + User + "/lights/" + l.id + "/state";
       float fade = Mathf.Clamp01(l.fade);
-      HSBColor hsbColor = new HSBColor(l.color);
+      HueHSBColor hsbColor = new HueHSBColor(l.color);
       int transitionTime = (int)(l.transitionTime * 10.0f); //this is specified in hundreds of millisecs (i.e 10 = 1000 ms = 1s)
       bool on = (l.on && (fade > 0.0f));
       string body = "{\"on\": " + (on ? "true" : "false") +
