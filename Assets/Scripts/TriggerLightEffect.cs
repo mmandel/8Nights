@@ -246,27 +246,28 @@ public class TriggerLightEffect : MonoBehaviour
          _lastPickedEffects.Clear();
 
          //TODO: check MIDI mappings!
-         MIDINoteMapping midiMap = null;
+         List<MIDINoteMapping> midiMaps = new List<MIDINoteMapping>();
          foreach (MIDINoteMapping m in NoteMappings)
          {
-            if (midiMap != null)
-               break;
             foreach (int note in m.MIDINotes)
             {
                if (note == midiEvent.MidiNote)
                {
-                  midiMap = m;
+                  midiMaps.Add(m);
                   break;
                }
             }
          }
 
-         if (midiMap != null)
+         if (midiMaps.Count > 0)
          {
             _lastMIDINote = midiEvent.MidiNote;
-            _lastPickedIdx = midiMap.EffectIdxToTrigger;
+            _lastPickedIdx = midiMaps[0].EffectIdxToTrigger;
             //Debug.Log("Mapped MIDI note " + _lastMIDINote + " to effect: " + _lastPickedIdx );
-            _lastPickedEffects.Add(EffectsToTrigger[_lastPickedIdx]);
+            for (int i = 0; i < midiMaps.Count; i++)
+            {
+               _lastPickedEffects.Add(EffectsToTrigger[midiMaps[i].EffectIdxToTrigger]);
+            }
             return _lastPickedEffects;
          }
          else if (TriggerRule == TriggerMode.Sequential)
