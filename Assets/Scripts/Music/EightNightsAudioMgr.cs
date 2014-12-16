@@ -607,7 +607,7 @@ public class EightNightsAudioMgr : MonoBehaviour
          ResetAllStems(false, true);
 
       //kill all sounds
-      if (Input.GetKeyDown(KeyCode.O))
+      if (Input.GetKeyDown(KeyCode.O) || Input.GetButtonDown("Start"))
          ResetAllStems(false, false);
 
       if (Input.GetKeyDown(KeyCode.KeypadPlus))

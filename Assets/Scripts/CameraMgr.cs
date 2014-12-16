@@ -56,7 +56,7 @@ public class CameraMgr : MonoBehaviour
    void LateUpdate()
    {
       //toggle rift / normal camera mode
-      if (Input.GetKeyDown(KeyCode.C))
+      if (Input.GetKeyDown(KeyCode.C) || Input.GetButtonDown("Select"))
          ActivateRiftCam(!_riftCamActivated);
    }
 
@@ -69,7 +69,7 @@ public class CameraMgr : MonoBehaviour
       //   ActivateRiftCam(!_riftCamActivated);
 
       //recenter rift
-      if (Input.GetKeyDown(KeyCode.Space))
+      if (Input.GetKeyDown(KeyCode.Space) || Input.GetButtonDown("A"))
          RecenterCamera();
 
       float lStickX = Input.GetAxis("Horizontal");
