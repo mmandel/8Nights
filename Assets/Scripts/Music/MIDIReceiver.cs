@@ -149,8 +149,9 @@ public class MIDIReceiver : MonoBehaviour
       float curBeat = BeatClock.Instance.elapsedBeats + BeatOffset;
       if (curBeat < 0.0f)
          curBeat = 0.0f;
-      foreach (NoteInfo info in _noteOns)
+      for(int i = 0 ; i < _noteOns.Count ; i++)
       {
+         NoteInfo info = _noteOns[i];
          if ((info.NoteOnBeat > _prevBeat) && (info.NoteOnBeat <= curBeat))
          {
             //Debug.Log("NOTE ON: " + info.NoteNumber);
@@ -159,8 +160,9 @@ public class MIDIReceiver : MonoBehaviour
          }
 
          //do preroll subscribers
-         foreach (PrerollSubscriber s in _preRollSubscribers)
+         for (int j = 0; j < _preRollSubscribers.Count; j++ )
          {
+            PrerollSubscriber s = _preRollSubscribers[j];
             float prerolledBeat = info.NoteOnBeat - s.Preroll();
             if ((prerolledBeat > _prevBeat) && (prerolledBeat <= curBeat))
             {
