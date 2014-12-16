@@ -9,6 +9,7 @@ public class FFTLightEffect : MonoBehaviour
 {
    public EightNightsMgr.GroupID Group;
    public EightNightsMgr.LightID Light;
+   public bool OutputToLight = true;
    public bool FadeWithStemVolume = true;
    public bool DisableDuringCrescendos = true;
    [Range(0, 39)]
@@ -48,6 +49,10 @@ public class FFTLightEffect : MonoBehaviour
    private float _tmpMax = 0.0f;
    private float _timeTillRangeUpdate = -1.0f;
    private float _flatLiningTime = 0.0f;
+
+   private float _lastSignalValue = 0.0f;
+
+   public float GetSignalValue() { return _lastSignalValue; }
 
 	void Start () 
    {
@@ -90,7 +95,10 @@ public class FFTLightEffect : MonoBehaviour
 
       curSignal *= groupFader;
 
-      EightNightsMgr.Instance.SetLight(Group, Light, curSignal, EightNightsMgr.Instance.GetDefaultColor(Group), 0.0f);
+      _lastSignalValue = curSignal;
+
+      if(OutputToLight)
+         EightNightsMgr.Instance.SetLight(Group, Light, curSignal, EightNightsMgr.Instance.GetDefaultColor(Group), 0.0f);
 	}
 
    float EvaluateADSR(float curSignal)

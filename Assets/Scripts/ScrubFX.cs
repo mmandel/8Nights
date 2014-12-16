@@ -12,6 +12,8 @@ public class ScrubFX : MonoBehaviour
    [Header("Light To Scrub With")]
    public EightNightsMgr.GroupID Group;
    public EightNightsMgr.LightID Light;
+   [Tooltip("Optional LightEffect to sync directly from. if set, will ignore Group and Light properties.  This is if you want to sync with FFT data that isn't driving the lights")]
+   public FFTLightEffect SyncFromLightEffect;
 
    [Header("Scrub Animation")]
    public bool EnableAnimScrub = false;
@@ -50,24 +52,40 @@ public class ScrubFX : MonoBehaviour
       if(_animator == null)
          return;
 
+      if (SyncFromLightEffect != null)
+         return;
+
       if ((e.Group == Group) && (e.Light == Light))
       {
          float val = e.Data.LightIntensity;
 
-         if (EnableAnimCycle && (CycleState.Length > 0))
-         {
-            _animator.speed = 0.0f;
-            const float kValScale = 4.5f; //to keep speed values in normal 0..1 range
-            _curCycleVal += Mathf.Lerp(CycleSpeedMin * kValScale * Time.deltaTime, CycleSpeedMax * kValScale * Time.deltaTime, CycleEase.Evaluate(val));
-            _curCycleVal = _curCycleVal % 1.0f; //wrap around
-            _animator.Play(CycleState, CycleLayer, _curCycleVal);
-         }
+         UpdateWithScrubValue(val);
+      }
+   }
 
-         if (EnableAnimScrub && (ScrubState.Length > 0))
-         {
-            _animator.speed = 0.0f;
-            _animator.Play(ScrubState, ScrubLayer, val);
-         }
+   void UpdateWithScrubValue(float val)
+   {
+      if (EnableAnimCycle && (CycleState.Length > 0))
+      {
+         _animator.speed = 0.0f;
+         const float kValScale = 4.5f; //to keep speed values in normal 0..1 range
+         _curCycleVal += Mathf.Lerp(CycleSpeedMin * kValScale * Time.deltaTime, CycleSpeedMax * kValScale * Time.deltaTime, CycleEase.Evaluate(val));
+         _curCycleVal = _curCycleVal % 1.0f; //wrap around
+         _animator.Play(CycleState, CycleLayer, _curCycleVal);
+      }
+
+      if (EnableAnimScrub && (ScrubState.Length > 0))
+      {
+         _animator.speed = 0.0f;
+         _animator.Play(ScrubState, ScrubLayer, val);
+      }
+   }
+
+   void Update()
+   {
+      if (SyncFromLightEffect != null)
+      {
+         UpdateWithScrubValue(SyncFromLightEffect.GetSignalValue());
       }
    }
 
