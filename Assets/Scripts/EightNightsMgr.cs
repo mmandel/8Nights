@@ -32,9 +32,10 @@ public class EightNightsMgr : MonoBehaviour
 
    public class LightTriggeredEventArgs : EventArgs
    {
-      public LightTriggeredEventArgs(GroupID g, LightID l) { Group = g; Light = l; }
+      public LightTriggeredEventArgs(GroupID g, LightID l, float w) { Group = g; Light = l; Weight = w; }
       public GroupID Group;
       public LightID Light;
+      public float Weight = 1.0f;
    }
    public delegate void LightTriggeredHandler(object sender, LightTriggeredEventArgs e);
 
@@ -338,10 +339,10 @@ public class EightNightsMgr : MonoBehaviour
       return Color.white;
    }
 
-   public void SendLightTriggeredEvent(GroupID g, LightID l)
+   public void SendLightTriggeredEvent(GroupID g, LightID l, float weight)
    {
       if (OnLightEffectTriggered != null)
-         OnLightEffectTriggered(this, new LightTriggeredEventArgs(g, l));
+         OnLightEffectTriggered(this, new LightTriggeredEventArgs(g, l, weight));
    }
 
    public void SendButtonTriggeredEvent(GroupID g)

@@ -103,6 +103,7 @@ public class TriggerLightEffect : MonoBehaviour
                   delayedEvent.Group = parentEffect.MIDIGroup;
                   delayedEvent.Light = lID;
                   delayedEvent.BeatTime = midiEvent.NoteBeat;
+                  delayedEvent.Weight = midiEvent.Velocity;
 
                   //WHY?
                   delayedEvent.BeatTime -= (BeatClock.Instance.LatencySecs() / BeatClock.Instance.SecsPerBeat()); 
@@ -132,6 +133,7 @@ public class TriggerLightEffect : MonoBehaviour
       public float BeatTime = 0.0f;
       public EightNightsMgr.GroupID Group;
       public EightNightsMgr.LightID Light;
+      public float Weight = 1.0f;
    }
 
    private List<LightTriggerEvent> _triggeredEventsToTrack = new List<LightTriggerEvent>();
@@ -188,7 +190,7 @@ public class TriggerLightEffect : MonoBehaviour
          {
             if (curBeat >= e.BeatTime)
             {
-               EightNightsMgr.Instance.SendLightTriggeredEvent(e.Group, e.Light);
+               EightNightsMgr.Instance.SendLightTriggeredEvent(e.Group, e.Light, e.Weight);
                eventsToRemove.Add(e);
             }
          }

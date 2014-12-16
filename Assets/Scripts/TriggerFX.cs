@@ -12,6 +12,10 @@ public class TriggerFX : MonoBehaviour
    public EightNightsMgr.GroupID Group;
    public EightNightsMgr.LightID Light;
 
+   public bool ApplyNoteVelocity = false;
+   [Range(0.0f, 1.0f)]
+   public float MinNoteVelocity = 0.0f;
+
    /*[Header("Emit Particles")]
    public bool EnableParticleEmit = false;
    public ParticleSystem[] ParticleSys = new ParticleSystem[0];
@@ -69,8 +73,10 @@ public class TriggerFX : MonoBehaviour
       if (TriggerEvent != TriggerEvents.NoteOnLight)
          return;
 
+      float weight = ApplyNoteVelocity ? e.Weight : 1.0f;
+
       if ((e.Light == Light) && (e.Group == Group))
-         Trigger();
+         Trigger(weight);
    }
 
    void OnButtonTriggered(object sender, EightNightsMgr.ButtonTriggeredEventArgs e)
@@ -82,7 +88,7 @@ public class TriggerFX : MonoBehaviour
          Trigger();
    }
 
-   void Trigger()
+   void Trigger(float weight = 1.0f)
    {
       /*if (EnableParticleEmit)
       {
@@ -106,6 +112,11 @@ public class TriggerFX : MonoBehaviour
       if (EnablePlayAnimation)
       {
          _animationStartTime = Time.time;
+
+         if (AnimatorState.Length > 0)
+         {
+            _animator.SetLayerWeight(AnimatorLayer, Mathf.Lerp(MinNoteVelocity, 1.0f, weight));
+         }
       }
 
       /*if (EnableAnimatorTrigger)
