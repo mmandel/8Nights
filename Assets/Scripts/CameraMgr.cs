@@ -56,7 +56,7 @@ public class CameraMgr : MonoBehaviour
    void LateUpdate()
    {
       //toggle rift / normal camera mode
-      if (Input.GetKeyDown(KeyCode.C) || Input.GetButtonDown("Select"))
+      if ((!Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.C)) || (!EightNightsMgr.Instance.HasCheatOverride() && Input.GetButtonDown("Select")))
          ActivateRiftCam(!_riftCamActivated);
    }
 
@@ -68,8 +68,8 @@ public class CameraMgr : MonoBehaviour
       //if (Input.GetKeyDown(KeyCode.C))
       //   ActivateRiftCam(!_riftCamActivated);
 
-      //recenter rift
-      if (Input.GetKeyDown(KeyCode.Space) || Input.GetButtonDown("A"))
+      //recenter rift   
+      if (Input.GetKeyDown(KeyCode.Space) || (!EightNightsMgr.Instance.HasCheatOverride() && Input.GetButtonDown("A")))
          RecenterCamera();
 
       float lStickX = Input.GetAxis("Horizontal");
@@ -86,6 +86,10 @@ public class CameraMgr : MonoBehaviour
       }
 
       DebugRotateTrans.localEulerAngles = _debugRotEuler;
+
+      //don't allow gamepad rotation when rift is active, to avoid accidental triggering
+      if (_riftCamActivated)
+         DebugRotateTrans.localEulerAngles = Vector3.zero;
 	}
 
    void RecenterCamera()

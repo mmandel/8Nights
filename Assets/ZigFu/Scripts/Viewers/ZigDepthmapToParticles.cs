@@ -36,8 +36,8 @@ public class ZigDepthmapToParticles : MonoBehaviour
     {
         // init stuff
         
-        YRes = ZigInput.Depth.yres;
-        XRes = ZigInput.Depth.xres;
+        YRes = (ZigInput.Depth != null) ? ZigInput.Depth.yres : 320;
+        XRes = (ZigInput.Depth != null) ? ZigInput.Depth.xres : 240;
         factorX = (int)(XRes / DesiredResolution.x);
         factorY = (int)(YRes / DesiredResolution.y);
         YScaled = YRes / factorY;
@@ -58,6 +58,9 @@ public class ZigDepthmapToParticles : MonoBehaviour
     private int cycle = 0;
     void LateUpdate()
     {
+       if ((ZigInput.Depth == null) || (ZigInput.LabelMap == null))
+          return;
+
         int x = 0;
      int y = 0;
         short[] rawDepthhMap = ZigInput.Depth.data;

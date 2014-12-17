@@ -34,12 +34,12 @@ public class EightNightsArduinoButton : MonoBehaviour
 
    void Update()
    {
-      if (!_arduino.Connected)
-         return;
+      //if (!_arduino.Connected)
+      //   return;
 
-      int buttonState = _arduino.digitalRead(buttonPin);
+      int buttonState = _arduino.Connected ? _arduino.digitalRead(buttonPin) : Arduino.HIGH;
 
-      bool newButtonPressed = (buttonState == Arduino.LOW);
+      bool newButtonPressed = (buttonState == Arduino.LOW) || EightNightsMgr.Instance.CheatStateForGroup(Group);
 
       //update persistent pressed state
       EightNightsMgr.Instance.SetButtonPressedState(Group, newButtonPressed);

@@ -79,6 +79,18 @@ public class EightNightsMgr : MonoBehaviour
       LightJams //DMX controlled, dimmable lights
    }
 
+   //some overrides that map all the face buttons of the gamepad to a button in the room in case I need to
+   //sub in a controller for the button press
+   public enum CheatOverrideMode
+   {
+      None = 0,
+      RoomButton1,
+      RoomButton2,
+      RoomButton3,
+      RoomButton4,
+      RiftButton
+   }
+
    [System.Serializable]
    public class LightGroupConfig
    {
@@ -221,6 +233,57 @@ public class EightNightsMgr : MonoBehaviour
    public static EightNightsMgr Instance { get; private set; }
 
    List<BlendHueData> _eventBlends = new List<BlendHueData>();
+   private CheatOverrideMode _cheatOverride = CheatOverrideMode.None;
+   private KeyCode[] _cheatOverrideKeys = new KeyCode[] { KeyCode.Z, KeyCode.X, KeyCode.C, KeyCode.V, KeyCode.B, KeyCode.N };
+
+   public bool HasCheatOverride()
+   {
+      return _cheatOverride != CheatOverrideMode.None;
+   }
+
+   public bool CheatDownForGroup(GroupID group)
+   {
+      if (!HasCheatOverride())
+         return false;
+
+      if (Input.GetButtonDown("A") || Input.GetButtonDown("B") || Input.GetButtonDown("X") || Input.GetButtonDown("Y"))
+      {
+         if (_cheatOverride == CheatOverrideMode.RoomButton1)
+            return group == GroupID.RoomGroup1;
+         else if (_cheatOverride == CheatOverrideMode.RoomButton2)
+            return group == GroupID.RoomGroup2;
+         else if (_cheatOverride == CheatOverrideMode.RoomButton3)
+            return group == GroupID.RoomGroup3;
+         else if (_cheatOverride == CheatOverrideMode.RoomButton4)
+            return group == GroupID.RoomGroup4;
+         else if (_cheatOverride == CheatOverrideMode.RiftButton)
+            return group.ToString().Contains("Rift");
+      }
+
+      return false;
+   }
+
+   public bool CheatStateForGroup(GroupID group)
+   {
+      if (!HasCheatOverride())
+         return false;
+
+      if (Input.GetButton("A") || Input.GetButton("B") || Input.GetButton("X") || Input.GetButton("Y"))
+      {
+         if (_cheatOverride == CheatOverrideMode.RoomButton1)
+            return group == GroupID.RoomGroup1;
+         else if (_cheatOverride == CheatOverrideMode.RoomButton2)
+            return group == GroupID.RoomGroup2;
+         else if (_cheatOverride == CheatOverrideMode.RoomButton3)
+            return group == GroupID.RoomGroup3;
+         else if (_cheatOverride == CheatOverrideMode.RoomButton4)
+            return group == GroupID.RoomGroup4;
+         else if (_cheatOverride == CheatOverrideMode.RiftButton)
+            return group.ToString().Contains("Rift");
+      }
+
+      return false;
+   }
 
    void Awake()
    {
@@ -499,6 +562,17 @@ public class EightNightsMgr : MonoBehaviour
    {
       if (Input.GetKeyDown(KeyCode.Escape))
          Application.Quit();
+
+      //check all the cheat overrides to see if we want to activate one
+      for (int i = 0; i < _cheatOverrideKeys.Length; i++)
+      {
+         KeyCode cheat = _cheatOverrideKeys[i];
+         if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(cheat))
+         {
+            _cheatOverride = (CheatOverrideMode)i;
+            Debug.Log("Activated Cheat Override: " + _cheatOverride.ToString());
+         }
+      }
 
       //update light configs to handle things like transitioning
       for (int i = 0; i < LightGroups.Length; i++)

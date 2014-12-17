@@ -92,11 +92,13 @@ public class RiftButtonMgr : MonoBehaviour
       }
 
       //handle keyboard cheat button press
-      if (Input.GetKeyDown(PressCheat) ||  Input.GetButtonDown("Y"))
+      bool overrideCheatActivated = (_selectedButton != null) && EightNightsMgr.Instance.CheatDownForGroup(_selectedButton.GroupToActivate);
+      if (Input.GetKeyDown(PressCheat) || overrideCheatActivated)
          PressButton();
 
       //update persistent pressed state
-      bool curPressed = Input.GetKey(PressCheat) || Input.GetButton("Y");
+      bool overrideCheatStatePressed = (_selectedButton != null) && EightNightsMgr.Instance.CheatStateForGroup(_selectedButton.GroupToActivate);
+      bool curPressed = Input.GetKey(PressCheat) || overrideCheatStatePressed;
       if (_selectedButton != null)
          EightNightsMgr.Instance.SetButtonPressedState(_selectedButton.GroupToActivate, curPressed);
 
