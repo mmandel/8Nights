@@ -46,6 +46,7 @@ public class CameraMgr : MonoBehaviour
 
       RiftMgr.enabled = _riftCamActivated;
       //RiftCamera.SetActive(_riftCamActivated); //oculus stuff gets unstable if you do this...
+      RiftMgr.camera.enabled = _riftCamActivated;
       
       NormalCamera.SetActive(!_riftCamActivated);
 
